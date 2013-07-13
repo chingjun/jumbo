@@ -1,0 +1,21 @@
+pkgname=python-numpy
+_realname=numpy
+pkgver=1.7.0
+_pkgver=1.7.0b2
+pkgrel=1
+pkgdesc="Scientific tools for Python"
+depends=('lapack' 'python' 'python-distribute' 'gcc46') # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/${_realname}-${_pkgver}.tar.gz")
+md5sums=('1b62cf0e34e2db58b0241b00d603df24')
+
+jumbo_install() {
+  cd "${srcdir}/${_realname}-${_pkgver}"
+
+  export Atlas=None
+  export LDFLAGS="${LDFLAGS} -shared"
+  export PATH="${JUMBO_ROOT}/opt/gcc46/bin:${PATH}"
+
+  python setup.py config_fc --fcompiler=gnu95 install --prefix="${JUMBO_ROOT}" --root="${pkgdir}" --optimize=1  
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

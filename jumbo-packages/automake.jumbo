@@ -1,0 +1,20 @@
+pkgname=automake
+pkgver=1.13.1
+pkgrel=1
+pkgdesc="A GNU tool for automatically creating Makefiles"
+depends=('xz' 'perl' 'autoconf') # missdepends=('bash')
+sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tar.xz")
+md5sums=('a60380ab11e1481376b7747d1b42ced2')
+
+jumbo_install() {
+  cd "${srcdir}"
+  xz -c -d "${pkgname}-${pkgver}.tar.xz" | tar -x
+
+  cd "${srcdir}/${pkgname}-${pkgver}"
+
+  ./configure --prefix="${JUMBO_ROOT}"
+  make
+  make DESTDIR="${pkgdir}" install
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

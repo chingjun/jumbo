@@ -1,0 +1,26 @@
+pkgname='sphinx'
+pkgver=2.0.6
+pkgrel=1
+pkgdesc='Free open-source SQL full-text search engine.'
+depends=('expat' 'libmysqlclient') # missdepends=('unixodbc' 'postgresql-libs')
+sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}-release.tar.gz")
+md5sums=('de6be5ee20b1bfafa2a0cea7155a8331')
+
+jumbo_install() {
+  cd "${srcdir}/${pkgname}-${pkgver}-release"
+
+  sed -i '15199,15199 s/x00/x21/' "${srcdir}/${pkgname}-${pkgver}-release/src/searchd.cpp"
+  ./configure --prefix="${JUMBO_ROOT}" \
+    --exec-prefix="${JUMBO_ROOT}" \
+    --localstatedir="${JUMBO_ROOT}/var/lib/sphinx" \
+    --sysconfdir="${JUMBO_ROOT}/etc/sphinx" \
+    --enable-id64
+  make
+  make DESTDIR="${pkgdir}" install
+
+  for _f in "${pkgdir}/${JUMBO_ROOT}/bin/"*; do
+    ln -s "${JUMBO_ROOT}/bin/${_f##*/}" "${pkgdir}/${JUMBO_ROOT}/bin/sphinx-${_f##*/}"
+  done
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

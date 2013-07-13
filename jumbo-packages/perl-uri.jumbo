@@ -1,0 +1,22 @@
+pkgname=perl-uri
+_realname=URI
+pkgver=1.60
+pkgrel=1
+pkgdesc="Uniform Resource Identifiers (absolute and relative)"
+depends=('perl') # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/${_realname}-${pkgver}.tar.gz")
+md5sums=('70f739be8ce28b8baba7c5920ffee4dc')
+
+jumbo_install() {
+  cd "${srcdir}/${_realname}-${pkgver}"
+  perl Makefile.PL INSTALLDIRS=vendor
+  make DESTDIR="${pkgdir}" install
+
+  # remove perllocal.pod and .packlist
+  find "${pkgdir}" -name .packlist -exec rm {} \;
+  find "${pkgdir}" -name perllocal.pod -exec rm {} \;
+  # remove empty directories
+  find "${pkgdir}" -depth -type d -empty -exec rmdir {} \;
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

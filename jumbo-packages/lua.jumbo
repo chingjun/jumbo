@@ -1,0 +1,39 @@
+pkgname=lua 
+pkgver=5.1.5
+pkgrel=1
+pkgdesc="A powerful light-weight programming language designed for extending applications" 
+depends=('readline') # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tar.gz"
+         "${JUMBO_REPO}/packages/${pkgname}/lua-5.1-cflags.patch"
+         "${JUMBO_REPO}/packages/${pkgname}/lua-so.patch")
+md5sums=('2e115fe26e435e33b0d5c022e4490567'
+         '249582bf1fd861ccf492d2c35a9fe732'
+         '808c23531cb585ddfda08c1618ffd5b8')
+
+jumbo_install() {
+  cd "${srcdir}/${pkgname}-${pkgver}"
+
+  patch -p1 -i "${srcdir}/lua-5.1-cflags.patch"
+  patch -p1 -i "${srcdir}/lua-so.patch"
+
+  # Fix prefix
+  sed -i -e "/^prefix= / s|/usr/local|${JUMBO_ROOT}|" etc/lua.pc
+  sed -i -e "/^#define LUA_ROOT/ s|\"/usr/local\"|\"${JUMBO_ROOT}\"|" src/luaconf.h
+
+  export CFLAGS="$CFLAGS -fPIC"
+  make INSTALL_DATA="cp -d" TO_LIB="liblua.a liblua.so liblua.so.5.1" \
+    INSTALL_TOP="${pkgdir}/${JUMBO_ROOT}" INSTALL_MAN="${pkgdir}/${JUMBO_ROOT}/share/man/man1" \
+    linux
+
+  make INSTALL_DATA="cp -d" TO_LIB="liblua.a liblua.so liblua.so.5.1 liblua.so.$pkgver" \
+    INSTALL_TOP="${pkgdir}/${JUMBO_ROOT}" INSTALL_MAN="${pkgdir}/${JUMBO_ROOT}/share/man/man1" \
+    install
+  install -D -m644 etc/lua.pc "${pkgdir}/${JUMBO_ROOT}/lib/pkgconfig/lua.pc"
+  install -D -m644 COPYRIGHT "${pkgdir}/${JUMBO_ROOT}/share/licenses/${pkgname}/COPYRIGHT"
+
+  # Install the documentation
+  install -d "${pkgdir}/${JUMBO_ROOT}/share/doc/lua"
+  install -m644 doc/*.{gif,png,css,html} "${pkgdir}/${JUMBO_ROOT}/share/doc/lua"
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

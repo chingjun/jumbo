@@ -1,0 +1,23 @@
+pkgname=perl-shell
+_realname=Shell
+pkgver=0.72
+_pkgver=0.72_01
+pkgrel=1
+pkgdesc="Run shell commands transparently within perl."
+depends=('perl') # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/${_realname}-${_pkgver}.tar.gz")
+md5sums=('c963a04f00103aedb90bd527e3bfc202')
+
+jumbo_install() {
+  cd "${srcdir}/${_realname}-${_pkgver}"
+  perl Makefile.PL INSTALLDIRS=vendor
+  make DESTDIR="${pkgdir}" install
+
+  # remove perllocal.pod and .packlist
+  find "${pkgdir}" -name .packlist -exec rm {} \;
+  find "${pkgdir}" -name perllocal.pod -exec rm {} \;
+  # remove empty directories
+  find "${pkgdir}" -depth -type d -empty -exec rmdir {} \;
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

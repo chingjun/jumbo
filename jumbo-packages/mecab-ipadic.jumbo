@@ -1,0 +1,17 @@
+pkgname=mecab-ipadic
+pkgver=2.7.0
+pkgrel=1
+pkgdesc="IPA dictionary for mecab"
+depends=('mecab') # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}-20070801.tar.gz")
+md5sums=('e09556657cc70e45564c6514a6b08495')
+
+jumbo_install() {
+  cd "${srcdir}/${pkgname}-${pkgver}-20070801"
+
+  ./configure --prefix="${JUMBO_ROOT}" --with-charset=utf8
+  make
+  make DESTDIR="${pkgdir}" install
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

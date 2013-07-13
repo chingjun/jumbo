@@ -1,0 +1,23 @@
+pkgname=autoconf
+pkgver=2.69
+pkgrel=2
+pkgdesc="A GNU tool for automatically configuring source code"
+depends=('m4' 'perl' 'xz') # missdepends=('awk' 'diffutils')
+sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tar.xz")
+md5sums=('50f97f4159805e374639a73e2636f22e')
+
+jumbo_install() {
+  cd "${srcdir}"
+  xz -c -d "${pkgname}-${pkgver}.tar.xz" | tar -x
+
+  cd "${srcdir}/${pkgname}-${pkgver}"
+
+  ./configure --prefix="${JUMBO_ROOT}"
+  make
+  make DESTDIR="${pkgdir}" install
+
+  # conflict with bintuils
+  rm -f ${pkgdir}/usr/share/info/standards.info
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

@@ -1,0 +1,15 @@
+pkgname=python-lxml
+pkgver=3.1.0
+pkgrel=1
+pkgdesc="Python binding for the libxml2 and libxslt libraries"
+depends=('python' 'libxslt') # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/lxml-${pkgver}.tar.gz")
+md5sums=('df70163fb581bbe45fdcd6069a503273')
+
+jumbo_install() {
+  cd "${srcdir}/lxml-${pkgver}"
+  python setup.py install --root="${pkgdir}" --optimize=1 \
+    --with-xslt-config="${JUMBO_ROOT}/bin/xslt-config"
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

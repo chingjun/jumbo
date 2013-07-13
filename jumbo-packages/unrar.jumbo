@@ -1,0 +1,16 @@
+pkgname=unrar
+pkgver=4.2.4
+pkgrel=1
+pkgdesc="The RAR uncompression program"
+depends=() # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/unrarsrc-${pkgver}.tar.gz")
+md5sums=('8ea9d1b4139474b282d76e627a2de3e4')
+
+jumbo_install() {
+  cd "${srcdir}/${pkgname}"
+
+  make -f makefile.unix CXXFLAGS="-fPIC ${CXXFLAGS}" STRIP="true"
+  install -Dm755 unrar "${pkgdir}/${JUMBO_ROOT}/bin/unrar"
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

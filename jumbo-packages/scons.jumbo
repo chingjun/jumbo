@@ -1,0 +1,16 @@
+pkgname=scons
+pkgver=2.2.0
+pkgrel=1
+pkgdesc="Extensible Python-based build utility"
+depends=('python') # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tar.gz")
+md5sums=('f737f474a02d08156c821bd2d4d4b632')
+
+jumbo_install() {
+  cd "${srcdir}/${pkgname}-${pkgver}"
+
+  python setup.py install --root="${pkgdir}" --optimize=1 \
+    --standard-lib --install-data=${JUMBO_ROOT}/share
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

@@ -1,0 +1,1413 @@
+#!/bin/bash
+
+set -e
+trap "echo Fail unexpectedly on line \$LINENO!" ERR
+
+export LC_ALL=C
+
+[ -z "$DEFAULT_JUMBO_DIR" ] && DEFAULT_JUMBO_DIR=var/jumbo
+[ -z "$DEFAULT_JUMBO_CONF" ] && DEFAULT_JUMBO_CONF=etc/jumbo-env.sh
+[ -z "$DEFAULT_CPPFLAGS" ] && DEFAULT_CPPFLAGS=""
+[ -z "$DEFAULT_CFLAGS" ] && DEFAULT_CFLAGS="-O2 -pipe"
+[ -z "$DEFAULT_CXXFLAGS" ] && DEFAULT_CXXFLAGS="$DEFAULT_CFLAGS"
+[ -z "$DEFAULT_LDFLAGS" ] && DEFAULT_LDFLAGS=""
+
+# colour macros
+if [ -t 1 ]
+then
+    BLACK="$( echo -e "\e[30m" )"
+    RED="$( echo -e "\e[31m" )"
+    GREEN="$( echo -e "\e[32m" )"
+    YELLOW="$( echo -e "\e[33m" )"
+    BLUE="$( echo -e "\e[34m" )"
+    PURPLE="$( echo -e "\e[35m" )"
+    CYAN="$( echo -e "\e[36m" )"
+    WHITE="$( echo -e "\e[37m" )"
+
+    HL_BLACK="$( echo -e "\e[30;1m" )"
+    HL_RED="$( echo -e "\e[31;1m" )"
+    HL_GREEN="$( echo -e "\e[32;1m" )"
+    HL_YELLOW="$( echo -e "\e[33;1m" )"
+    HL_BLUE="$( echo -e "\e[34;1m" )"
+    HL_PURPLE="$( echo -e "\e[35;1m" )"
+    HL_CYAN="$( echo -e "\e[36;1m" )"
+    HL_WHITE="$( echo -e "\e[37;1m" )"
+
+    BG_BLACK="$( echo -e "\e[40m" )"
+    BG_RED="$( echo -e "\e[41m" )"
+    BG_GREEN="$( echo -e "\e[42m" )"
+    BG_YELLOW="$( echo -e "\e[43m" )"
+    BG_BLUE="$( echo -e "\e[44m" )"
+    BG_PURPLE="$( echo -e "\e[45m" )"
+    BG_CYAN="$( echo -e "\e[46m" )"
+    BG_WHITE="$( echo -e "\e[47m" )"
+
+    NORMAL="$( echo -e "\e[0m" )"
+fi
+
+_black()  { echo "$BLACK""$@""$NORMAL";}
+_red()    { echo "$RED""$@""$NORMAL";}
+_green()  { echo "$GREEN""$@""$NORMAL";}
+_yellow() { echo "$YELLOW""$@""$NORMAL";}
+_blue()   { echo "$BLUE""$@""$NORMAL";}
+_purple() { echo "$PURPLE""$@""$NORMAL";}
+_cyan()   { echo "$CYAN""$@""$NORMAL";}
+_white()  { echo "$WHITE""$@""$NORMAL";}
+
+_hl_black()  { echo "$HL_BLACK""$@""$NORMAL";}
+_hl_red()    { echo "$HL_RED""$@""$NORMAL";}
+_hl_green()  { echo "$HL_GREEN""$@""$NORMAL";}
+_hl_yellow() { echo "$HL_YELLOW""$@""$NORMAL";}
+_hl_blue()   { echo "$HL_BLUE""$@""$NORMAL";}
+_hl_purple() { echo "$HL_PURPLE""$@""$NORMAL";}
+_hl_cyan()   { echo "$HL_CYAN""$@""$NORMAL";}
+_hl_white()  { echo "$HL_WHITE""$@""$NORMAL";}
+
+_bg_black()  { echo "$BG_BLACK""$@""$NORMAL";}
+_bg_red()    { echo "$BG_RED""$@""$NORMAL";}
+_bg_green()  { echo "$BG_GREEN""$@""$NORMAL";}
+_bg_yellow() { echo "$BG_YELLOW""$@""$NORMAL";}
+_bg_blue()   { echo "$BG_BLUE""$@""$NORMAL";}
+_bg_purple() { echo "$BG_PURPLE""$@""$NORMAL";}
+_bg_cyan()   { echo "$BG_CYAN""$@""$NORMAL";}
+_bg_white()  { echo "$BG_WHITE""$@""$NORMAL";}
+
+# helper functions
+_message() {
+    echo "$@" >&2
+}
+
+_trace() {
+    echo $(_hl_blue '  ->') "$@" >&2
+}
+
+_notice() {
+    echo $(_hl_green '==>') "$@" >&2
+}
+
+_warning() {
+    echo $(_hl_yellow '==> WARNING:') "$@" >&2
+}
+
+_fatal() {
+    echo $(_hl_red '==> ERROR:') "$@" >&2
+    exit 1
+}
+
+_print_fatal() {
+    echo $(_hl_red '==> ERROR:') "$@" >&2
+}
+
+_pkg()  { _hl_yellow "$@";}
+
+JUMBO_AWK_UTIL_VERCMP='
+function vercmp(a,b)
+{
+    cur = 0;
+    r = 1;
+    while(a != "" && b != "" && r < 100) {
+        if (cur == 0) {
+            acur = a;
+            sub(/[^0-9].*$/, "", acur);
+            sub(/^[0-9]*/, "", a);
+            bcur = b;
+            sub(/[^0-9].*$/, "", bcur);
+            sub(/^[0-9]*/, "", b);
+        } else {
+            acur = a;
+            sub(/[0-9].*$/, "", acur);
+            sub(/^[^0-9]*/, "", a);
+            bcur = b;
+            sub(/[0-9].*$/, "", bcur);
+            sub(/^[^0-9]*/, "", b);
+        }
+        if (cur == 0) {
+            acur = acur + 0;
+            bcur = bcur + 0;
+        }
+        if (acur < bcur) {
+            return -1;
+        } else if (acur > bcur) {
+            return 1;
+        }
+        cur = 1 - cur;
+        r ++;
+    }
+    return 0
+}
+'
+
+# compare two version numbers
+# return 0 if equal, 1 if first is newer, -1 if second is newer
+_compare_version() {
+    if [[ "$1" == "$2" ]]
+    then
+        echo 0
+        return
+    fi
+    echo "$1" "$2" | awk "$JUMBO_AWK_UTIL_VERCMP"'
+    {
+        print vercmp($1, $2);
+    }
+    '
+}
+
+# action router
+JUMBO_ROUTE_PREFIX=${JUMBO_ROUTE_PREFIX:-"jumbo_action_"}
+_run_cmd() {
+    local cmd=${1//-/_}
+    [[ "$#" > 0 ]] && shift
+    "$JUMBO_ROUTE_PREFIX$cmd" "$@"
+}
+_desc() {
+    if [ -n "$JUMBO_ROUTE_SHOW_DESC" ]
+    then
+        echo -e "$@"
+        return 1
+    fi
+}
+
+_usage() {
+    if [ -n "$JUMBO_ROUTE_SHOW_USAGE" ]
+    then
+        echo -e "$@"
+        return 1
+    fi
+}
+
+_get_cmd_desc() {
+    export JUMBO_ROUTE_SHOW_DESC=1
+    _run_cmd "$1"
+    export JUMBO_ROUTE_SHOW_DESC=
+}
+
+_get_cmd_usage() {
+    export JUMBO_ROUTE_SHOW_USAGE=1
+    _run_cmd "$1"
+    export JUMBO_ROUTE_SHOW_USAGE=
+}
+
+_get_all_cmds() {
+    compgen -c "$JUMBO_ROUTE_PREFIX" | sed -e "s|^$JUMBO_ROUTE_PREFIX||" -e 's/_/-/g' | sort -u
+}
+
+_cmd_exist() {
+    local cmd=${1//-/_}
+    command -v "$JUMBO_ROUTE_PREFIX$cmd" &> /dev/null
+}
+
+_route() {
+    local cmd="$1"
+    CMD=$cmd
+    if _cmd_exist "$cmd"
+    then
+        _run_cmd "$@"
+    else
+        [ -z "$cmd" ] || _print_fatal "Command '$cmd' does not exist!"
+        _show_help
+    fi
+}
+
+# show help of a command if given
+# if called without parameter, list all commands
+_show_help() {
+    if [ -z "$1" ]
+    then
+        _message "Usage: $0 command parameters..."
+        _message "Commands available:"
+        local cmd_list="$(_get_all_cmds)"
+        local longest_word="$(echo "$cmd_list" | awk '{if (length($1) > max) max = length($1);} END {print max;}')"
+        echo "$cmd_list" | while read cmd
+        do
+            printf "  %-${longest_word}s - %s\n" "$cmd" "$(_get_cmd_desc "$cmd")" >&2
+        done
+    else
+        if _cmd_exist "$1"
+        then
+            local cmd="$1"
+            _message "$cmd - $(_get_cmd_desc "$cmd")"
+            _message "Usage: $(_get_cmd_usage "$cmd")"
+        else
+            _fatal "Command '$cmd' does not exist!"
+        fi
+    fi
+}
+
+# download a file, check md5sum as well
+# @param1 : file source
+# @param2 : file md5sum, empty for no check
+# @param3 : dest filename
+# @param4 : don't show progress bar, "1" don't show, other value to show
+_download_file() {
+    local scheme=${1%%://*}
+    _trace "Downloading file $1..."
+    #use file in current directory if match
+    if [[ "$JUMBO_USE_LOCAL_FILE" == "1" ]]
+    then
+        local filename=$(basename $1)
+        if [[ -f "$filename" && ( -z "$2" ||  "$(md5sum "$filename" | cut -d' ' -f1 )" == "$2" ) ]]
+        then
+            cp "$filename" $3
+            return
+        fi
+    fi
+    case "X$scheme" in
+    Xhttp | Xftp)
+        if [[ "$scheme" == "http" ]]
+        then
+            local dl_add="?uid=$JUMBO_UID"
+        fi
+        if which curl &>/dev/null
+        then
+            if [[ "$4" == "1" ]]
+            then
+                curl -f "$1""$dl_add" > "$3" 2>/dev/null || _fatal "Download failed"
+            else
+                curl -f -# "$1""$dl_add" > "$3" || _fatal "Download failed"
+            fi
+        else
+            wget "$1""$dl_add" -O "$3" 2>/dev/null || _fatal "Download failed"
+        fi
+        ;;
+    Xfile)
+        local real_filename="${1#file://}"
+        cp "$real_filename" "$3" || _fatal "Download failed"
+        ;; 
+    *)
+        _fatal "Scheme not supported!"
+    esac
+    [[ -z "$2" || "$(md5sum "$3" | awk '{print $1}')" == "$2" ]] || _fatal "File verification failed"
+}
+
+# given install file, return one line
+# @param1 : install file path
+_install_to_line() {
+    #read in subshell so that it is cleaner
+    (source "$1"; echo "$pkgname	$pkgver-$pkgrel	$1	$pkgdesc	${depends[@]}")
+}
+
+_update_cache_list() {
+    _notice "Updating cache list...."
+    mkdir -p "${JUMBO_CACHE_LIST%/*}"
+    rm -f "$JUMBO_CACHE_LIST.tmp"
+    for repo in "${JUMBO_REPO[@]}"
+    do
+        echo "$repo" >> "$JUMBO_CACHE_LIST.repolist"
+        local repo_filename="${repo//\//::}"
+        local repo_installs="$JUMBO_REPO_INSTALLS/$repo_filename"
+        local repo_download="$JUMBO_DOWNLOADS/$repo_filename.tar.gz"
+        _download_file "$repo/list.tar.gz" "" "$repo_download" 1
+        #failed to update
+        if [ "$?" != "0" ]
+        then
+            _warning "Warning: Failed to get repo listing"
+            if [ ! -f "$JUMBO_CACHE_LIST" ]
+            then
+                _fatal "No cache file found, exiting..." 
+            fi
+            _notice "Using cache file..."
+        fi
+
+        #success, process downloaded files
+        mkdir -p "$repo_installs.tmp"
+        tar -xzf "$repo_download" -C "$repo_installs.tmp"
+        rm -rf "$repo_installs"
+        mv "$repo_installs"{.tmp,}
+
+        #generate list file
+        ls "$repo_installs" | while read i
+        do
+            _install_to_line "$repo_installs/$i" >> "$JUMBO_CACHE_LIST.tmp"
+            # add repo information to the top of jam file
+            # so that we can support multiple repositories
+            sed -i '1iJUMBO_REPO="'"$repo"'" ## automatically added by jumbo' "$repo_installs/$i"
+        done
+    done
+
+    # remove duplicate entry in jumbo list
+    cat "$JUMBO_CACHE_LIST.tmp" | sort | awk "$JUMBO_AWK_UTIL_VERCMP"'
+    {
+        if (prev != $1) {
+            if (prev_line != "")
+                print prev_line;
+            prev_line = $0;
+            prev = $1;
+            prev_ver = $2
+        } else if (vercmp(prev_ver, $2) < 0) {
+            prev_line = $0;
+            prev = $1;
+            prev_ver = $2;
+        }
+    }
+    END {
+        print prev_line;
+    }
+    ' > "$JUMBO_CACHE_LIST.dedup"
+
+    mv "$JUMBO_CACHE_LIST"{.dedup,}
+    rm -f "$JUMBO_CACHE_LIST.tmp"
+}
+_fetch() {
+    local cache_time=$(stat -c %Y "$JUMBO_CACHE_LIST" 2>/dev/null || echo 0)
+    local cur_time=$(date +%s)
+    if (( (cur_time - cache_time) > 86400))
+    then
+        _update_cache_list
+    fi
+    cat "$JUMBO_CACHE_LIST"
+}
+
+# list format:
+# $1: package name
+# $2: current version
+# $3: install file location
+# $4: human readable description
+# $5: dependencies, space seperated
+_filter_install() {
+    awk 'BEGIN{FS="\t"} {print $3}' 2>/dev/null
+}
+_filter_desc() {
+    awk 'BEGIN{FS="\t"} {print $1 " : " $4}' 2>/dev/null
+}
+_filter_desc_only() {
+    awk 'BEGIN{FS="\t"} {print $4}' 2>/dev/null
+}
+_filter_name() {
+    awk 'BEGIN{FS="\t"} {print $1}' 2>/dev/null
+}
+_filter_name_ver() {
+    awk 'BEGIN{FS="\t"} {print $1 " - " $2}' 2>/dev/null
+}
+_filter_ver() {
+    awk 'BEGIN{FS="\t"} {print $2}' 2>/dev/null
+}
+_filter_depend() {
+    awk 'BEGIN{FS="\t"} {print $5}' 2>/dev/null
+}
+_split_depend() {
+    awk '{for(i=1;i<=NF;i++) print $i;}' 2>/dev/null
+}
+_get_by_name() {
+    grep "^$1	"
+}
+_get_list() {
+    _fetch | awk 'BEGIN{FS="\t"} {print $1, $3}' 2>/dev/null
+}
+
+_get_desc() {
+    _fetch | _filter_desc
+}
+
+_get_version_desc() {
+    _fetch | awk 'BEGIN{FS="\t"} {print $1, $2, $4}' 2>/dev/null
+}
+
+_get_all_deps_raw() {
+    local package_list=$(cat)
+    local ori=$( _param_to_lines "$@" | sort | sed '/^$/d' | uniq )
+
+    if (( $(echo "$ori" | sed '/^$/d' | wc -l) == 0 ))
+    then
+        return
+    fi
+
+    #package that has already appeared
+    local appeared="$ori"
+
+    #is the result changed in this iteration?
+    local changed=1
+
+    local level=0
+
+    local leveldeplist[0]="$ori"
+    
+    local lastlevel="$ori"
+
+    while (($changed == 1))
+    do
+        level=$((level+1))
+        GREP_PARAM=
+        for i in $lastlevel
+        do
+            GREP_PARAM="$GREP_PARAM|(^$i	)"
+        done
+        GREP_PARAM=${GREP_PARAM:1}
+        lastlevel="$( (echo "$package_list" | grep -E "$GREP_PARAM" | _filter_depend | _split_depend) | sed '/^$/d' | sort | uniq)"
+        if [[ -z "$lastlevel" ]] # final dependency level
+        then
+            changed=0
+        else
+            changed=1
+            leveldeplist[$level]="$lastlevel"
+            appeared=$( (echo "$appeared" && echo $lastlevel) | sort | uniq | sed '/^$/d')
+        fi
+    done
+    
+    #print out final result
+    appeared_so_far=
+    for ((i=level-1; i>=0; i--))
+    do
+        (echo "${leveldeplist[$i]}" && echo "$appeared_so_far" && echo "$appeared_so_far") | sort | uniq -u | sed '/^$/d'
+        appeared_so_far=$( (echo "${leveldeplist[$i]}" && echo "$appeared_so_far") | sort | uniq )
+    done
+}
+
+_get_all_deps() {
+    _fetch | _get_all_deps_raw "$@"
+}
+
+_param_to_lines() {
+    for i in "$@"
+    do
+        echo "$i"
+    done
+}
+
+_add_to_manual_install() {
+    touch "$JUMBO_MANUAL_INSTALL_LIST"
+    cp "$JUMBO_MANUAL_INSTALL_LIST"{,.bak}
+    for i in "$@"
+    do
+        echo "$i" >> "$JUMBO_MANUAL_INSTALL_LIST.bak"
+    done
+    cat "$JUMBO_MANUAL_INSTALL_LIST.bak" | sort | uniq | sed '/^$/d' > "$JUMBO_MANUAL_INSTALL_LIST.sorted"
+    mv "$JUMBO_MANUAL_INSTALL_LIST"{.sorted,}
+    rm "$JUMBO_MANUAL_INSTALL_LIST.bak"
+}
+
+_remove_from_manual_install() {
+    cp "$JUMBO_MANUAL_INSTALL_LIST"{,.bak}
+    for i in "$@"
+    do
+        sed -i '/^'"$i"'$/d' "$JUMBO_MANUAL_INSTALL_LIST.bak"
+    done
+    mv "$JUMBO_MANUAL_INSTALL_LIST"{.bak,}
+}
+
+_local_cache_jam_file() {
+    echo "$JUMBO_LOCAL_INSTALLS/$1.jumbo"
+}
+
+# run hook of a package
+# @param1 : install file
+# @param2 : hook name
+_run_hook() {
+    (
+        . "$1" 
+        if declare -f "$2" &>/dev/null
+        then
+            _trace "Running hook $2"
+            bash -e -c ". '$1'; $2"
+        fi
+    )
+}
+
+# install one package
+# @param1 : install file
+# @param2 : pre_install hook name, or jumbo_pre_install by default
+# @param3 : post_install hook name, or jumbo_post_install by default
+_install_one_package() {
+    # install one package here
+    local install_file="$1"
+
+    local line=$(_install_to_line "$install_file")
+    local pkgname=$(echo "$line" | _filter_name)
+    local pre_install=${2:-jumbo_pre_install}
+    local post_install=${3:-jumbo_post_install}
+    _notice "Start installation of package $(_pkg $pkgname)"
+    
+    #get the install file location first
+    if [ -z "$TMP_DIR" ] || [ ! -d "$TMP_DIR" ]
+    then
+        TMP_DIR=$(mktemp -p "$JUMBO_TMP_DIR" -d -t jumbo.XXXXXXXXX)
+    fi
+    local localdir="$TMP_DIR/$pkgname"
+    local srcdir="$localdir/src"
+    local pkgdir="$localdir/pkg"
+    mkdir -p "$srcdir" "$pkgdir"
+    # do everything in a subshell to prevent contamination
+    (
+        hash -r
+        . "$install_file"
+
+        # 1. download files, check checksum
+        _trace "Downloading files for package..."
+        local sources_num=${#sources[@]}
+        for ((i=0; i<sources_num; i++))
+        do
+            local filename=$(basename "${sources[$i]}")
+            local namelen=${#filename}
+            _download_file "${sources[$i]}" "${md5sums[$i]}" "$srcdir/$filename"
+            (
+                cd "$srcdir"
+                # auto extract
+                if [ "$(expr match "$filename" ".*\.tar\.gz$")" == "$namelen" ]
+                then
+                    _trace "Extracting $filename..."
+                    tar -xzf "$srcdir/$filename"
+                elif [ "$(expr match "$filename" ".*\.tar\.bz2$")" == "$namelen" ]
+                then
+                    _trace "Extracting $filename..."
+                    tar -xjf "$srcdir/$filename"
+                elif [ "$(expr match "$filename" ".*\.tgz$")" == "$namelen" ]
+                then
+                    _trace "Extracting $filename..."
+                    tar -xzf "$srcdir/$filename"
+                elif [ "$(expr match "$filename" ".*\.tbz2$")" == "$namelen" ]
+                then
+                    _trace "Extracting $filename..."
+                    tar -xjf "$srcdir/$filename"
+                elif [ "$(expr match "$filename" ".*\.tar$")" == "$namelen" ]
+                then
+                    _trace "Extracting $filename..."
+                    tar -xf "$srcdir/$filename"
+                #elif [ "$(expr match "$filename" ".*\.zip$")" == "$namelen" ]
+                #then
+                #    _trace "Extracting $filename..."
+                #    7z x -y "$srcdir/$filename"
+                #elif [ "$(expr match "$filename" ".*\.xz$")" == "$namelen" ]
+                #then
+                #    _trace "Extracting $filename..."
+                #    7z x -y "$srcdir/$filename"
+                fi
+            )
+        done
+
+        # pre install script
+        _run_hook "$install_file" "$pre_install" || _fatal "$pre_install hook failed"
+
+        # 2. run install script
+        _trace "Installing..."
+        srcdir="$srcdir"
+        pkgdir="$pkgdir"
+        export CPPFLAGS="$CPPFLAGS $DEFAULT_CPPFLAGS -I$JUMBO_ROOT/include"
+        export CFLAGS="$CFLAGS $DEFAULT_CFLAGS"
+        export CXXFLAGS="$CXXFLAGS $DEFAULT_CXXFLAGS"
+        export LDFLAGS="$LDFLAGS $DEFAULT_LDFLAGS -Wl,-rpath=$JUMBO_ROOT/lib -L$JUMBO_ROOT/lib"
+        export PKG_CONFIG_PATH="$JUMBO_ROOT/lib/pkgconfig:$PKG_CONFIG_PATH"
+        export MAKEFLAGS="$JUMBO_MAKE_ARGS"
+        export JUMBO_ROOT
+        #call the real installation script
+        local log_file_name="$JUMBO_INSTALL_LOG/$pkgname.$(date +%Y%m%d%H%M)"
+        echo "Installing $pkgname, version $pkgver-$pkgrel" > "$log_file_name"
+
+        # real install script
+        if declare -f jumbo_install &>/dev/null
+        then
+            (
+                if [[ -z "$JUMBO_VERBOSE" ]]
+                then
+                    bash -e -c "srcdir='$srcdir'; pkgdir='$pkgdir'; . '$install_file'; jumbo_install" < /dev/null 2>&1 | awk 'BEGIN {a[0]="-"; a[1]="\\"; a[2]="|"; a[3]="/";} {print $0; if (NR%5 == 0) {printf "%s", "\033[1A\033[20C" a[s] "\033[1B\033[21D" > "/dev/stderr"; s=(s+1)%4;}} END{printf "%s", "\033[1A\033[20C \033[1B\033[21D" > "/dev/stderr"}' >> "$log_file_name"
+                    [[ "${PIPESTATUS[0]}" == "0" ]]
+                else
+                    bash -e -c "srcdir='$srcdir'; pkgdir='$pkgdir'; . '$install_file'; jumbo_install" 2>&1 < /dev/null | tee -a "$log_file_name" >&2
+                    [[ "${PIPESTATUS[0]}" == "0" ]]
+                fi
+            ) || { _print_fatal "Installation failed! check log at $log_file_name"; _fatal "Installation environment is at $localdir"; }
+        fi
+
+        # 3. calculate files
+        _trace "Calculating files..."
+        mkdir -p $(dirname "$JUMBO_FILES_LIST/$pkgname")
+        mkdir -p "$pkgdir/$JUMBO_ROOT"
+        tar -c -C "$pkgdir/$JUMBO_ROOT" -f "$localdir/install.tar" .
+        tar -tf "$localdir/install.tar" | sort > "$localdir/files" && mv "$localdir/files" "$JUMBO_FILES_LIST/$pkgname"
+        [[ -n "$JUMBO_VERBOSE" ]] && tar -tf "$localdir/install.tar" | sort
+
+        # backup files
+        local backup_file="$JUMBO_BACKUP_DIR/$pkgname"
+        local changed=
+        ## generate original md5sum first
+        if [ "${#backups[@]}" != 0 ]
+        then
+            (
+                cd "$pkgdir/$JUMBO_ROOT"
+                md5sum "${backups[@]}" > "$backup_file.new" 2>/dev/null </dev/null
+            )
+        fi
+        ## calculate for actions
+        for i in "${backups[@]}"
+        do
+            local md5_ori=
+            local md5_cur=
+            local md5_new=
+            [ -f "$backup_file" ] && md5_ori=$(grep -F " $i" "$backup_file" 2>/dev/null | awk '(NR == 1 || length < length(shortest)) { shortest = $0 } END { print shortest }' | cut -d' ' -f1)
+            [ -f "$JUMBO_ROOT/$i" ] && md5_cur=$(md5sum "$JUMBO_ROOT/$i" 2>/dev/null | cut -d' ' -f1)
+            [ -f "$pkgdir/$JUMBO_ROOT/$i" ] && md5_new=$(md5sum "$pkgdir/$JUMBO_ROOT/$i" 2>/dev/null | cut -d' ' -f1)
+
+            # if current file does not exist then no point doing anything
+            [[ -n "$md5_cur" ]] || continue
+
+            if [[ "$md5_ori" != "$md5_cur" && "$md5_ori" == "$md5_new" ]]
+            then
+                # user changed his conf file, keep his conf file
+                rm -f "$pkgdir/$JUMBO_ROOT/$i"
+                changed=1
+            elif [[ "$md5_ori" != "$md5_cur" && "$md5_cur" != "$md5_new" && "$md5_new" != "$md5_ori" ]]
+            then
+                # both user and repo changed the file, generate pacnew file and inform the user
+                mv "$pkgdir/$JUMBO_ROOT/$i"{,.new}
+                _warning "\${JUMBO_ROOT}/$i installed as \${JUMBO_ROOT}/$i.new"
+                changed=1
+            fi
+        done
+        ## repackage if file changed
+        if [ -n "$changed" ]
+        then
+            rm -f "$localdir/install.tar"
+            tar -c -C "$pkgdir/$JUMBO_ROOT" -f "$localdir/install.tar" .
+        fi
+        ## move new md5sum file in place
+        if [ "${#backups[@]}" != 0 ]
+        then
+            mv "$backup_file".new "$backup_file"
+        fi
+
+        # 4. install to real location
+        mkdir -p "$JUMBO_ROOT"
+        tar -x -C "$JUMBO_ROOT" -f "$localdir/install.tar"
+
+        # post install script
+        _run_hook "$install_file" "$post_install" || _print_fatal "$post_install hook failed, but the package is still installed"
+
+        # 5. install log
+        cp "$install_file" "$(_local_cache_jam_file $pkgname)"
+
+        cp "$JUMBO_INSTALLED_LIST"{,.bak}
+        sed -i "/^$pkgname	/d" "$JUMBO_INSTALLED_LIST.bak"
+        _install_to_line "$JUMBO_LOCAL_INSTALLS/$pkgname.jumbo" >> "$JUMBO_INSTALLED_LIST.bak"
+        mv "$JUMBO_INSTALLED_LIST"{.bak,}
+    ) || _fatal "Installation aborted"
+    _notice "Installation of $(_pkg $pkgname) done!"
+}
+
+# remove one package
+# @param1 : package name, no need to give install file coz not needed
+_remove_one_package() {
+    #TODO
+    local backup_file="$JUMBO_BACKUP_DIR/$1"
+    _notice "Start removal of package $(_pkg $1)"
+    # try to run pre remove script
+    if [ -f "$(_local_cache_jam_file "$1")" ]
+    then
+        _run_hook "$(_local_cache_jam_file "$1")" jumbo_pre_remove || _fatal "jumbo_pre_remove failed"
+    fi
+    _trace "Removing..."
+    # backup files
+    test -f "$backup_file" && cat "$backup_file" | while read line
+    do
+        local filename="$(echo "$line" | cut -d' ' -f3-)"
+        local md5_ori=$(echo "$line" | cut -d' ' -f1)
+        [ -f "$JUMBO_ROOT/$filename" ] || continue
+        local md5_cur=$(md5sum "$JUMBO_ROOT/$filename" | cut -d' ' -f1)
+        if [ "$md5_cur" != "$md5_ori" ]
+        then
+            mv "$JUMBO_ROOT/$filename"{,.save}
+            _warning "\${JUMBO_ROOT}/$filename backed up as \${JUMBO_ROOT}/$filename.save"
+        fi
+    done
+    # remove from install log
+    cat "$JUMBO_INSTALLED_LIST" | sed "/^$1	/d" > "$JUMBO_INSTALLED_LIST.bak"
+    mv "$JUMBO_INSTALLED_LIST"{.bak,}
+    # remove actual files
+    (
+        cd "$JUMBO_ROOT"
+        grep -v '/$' "$JUMBO_FILES_LIST/$1" 2>/dev/null | xargs rm -f &>/dev/null
+        grep '/$' "$JUMBO_FILES_LIST/$1" 2>/dev/null | sort -r | xargs rmdir &>/dev/null
+    )
+    # remove "files" file
+    rm -f "$JUMBO_FILES_LIST/$1"
+    # remove backup files
+    rm -f "$backup_file"
+    # try to run post remove script
+    if [ -f "$(_local_cache_jam_file "$1")" ]
+    then
+        _run_hook "$(_local_cache_jam_file "$1")" jumbo_post_remove || _print_fatal "jumbo_post_remove failed but package will still be removed"
+    fi
+    _notice "Package $(_pkg $1) removed!"
+}
+
+# update one package
+# @param1 : install file
+_update_one_package() {
+    local install_file="$1"
+
+    local line=$(_install_to_line "$install_file")
+    local pkgname=$(echo "$line" | _filter_name)
+    local files_file="$JUMBO_FILES_LIST/$pkgname"
+    cp "$files_file"{,.tmp}
+
+    _install_one_package "$install_file" jumbo_pre_update jumbo_post_update
+
+    # calculate file difference, and remove files from old version
+    local file_difference=$( (cat "$files_file" && cat "$files_file" && cat "$files_file.tmp") | sort | uniq -u )
+
+    # remove those files
+    (
+        cd "$JUMBO_ROOT"
+        echo "$file_difference" | grep -v '/$' | xargs rm -f &>/dev/null
+        echo "$file_difference" | grep '/$' | sort -r | xargs rmdir &>/dev/null
+    )
+    
+    rm -f "$files_file.tmp"
+}
+
+# support only one package check a time
+_is_installed() {
+    grep "^$1	" "$JUMBO_INSTALLED_LIST" &>/dev/null
+}
+
+# as the name suggests, we filter out the package that are already installed
+_filter_out_installed() {
+    while read line
+    do
+        if ! _is_installed $line
+        then
+            echo $line
+        fi
+    done
+}
+
+_filter_out_not_installed() {
+    while read line
+    do
+        if _is_installed $line
+        then
+            echo $line
+        fi
+    done
+}
+
+_filter_out_installed_but_keep() {
+    while read line
+    do
+        if ! _is_installed $line
+        then
+            echo $line
+        else
+            for keep in "$@"
+            do
+                if [ "X$line" == "X$keep" ]
+                then
+                    echo $line
+                    break
+                fi
+            done
+        fi
+    done
+}
+
+_installed_version() {
+    cat "$JUMBO_INSTALLED_LIST" | _get_by_name "$1" | _filter_ver
+}
+
+# if local exist but repo does not, then latest
+# if repo exist but local does not, then not latest
+# else compare two versions
+_is_latest() {
+    local installed_version=$(cat "$JUMBO_INSTALLED_LIST" | _get_by_name "$1" | _filter_ver)
+    local repo_version=$(_fetch | _get_by_name "$1" | _filter_ver)
+    if [[ -z "$repo_version" ]]
+    then
+        return 0 # means true
+    elif [[ -z "$installed_version" ]]
+    then
+        return 1 # means false
+    else
+        [[ "$(_compare_version "$installed_version" "$repo_version")" != "-1" ]]
+    fi
+}
+
+_filter_out_latest() {
+    while read line
+    do
+        if ! _is_latest $line
+        then
+            echo $line
+        fi
+    done
+}
+
+_find_unused_packages() {
+    local all_packages=$( cat "$JUMBO_INSTALLED_LIST" | _filter_name )
+    local needed_packages=$( cat "$JUMBO_INSTALLED_LIST" | _get_all_deps_raw $(cat "$JUMBO_MANUAL_INSTALL_LIST") )
+    (echo "$all_packages" && echo "$needed_packages" && echo "$needed_packages") | sort | uniq -u | sed '/^$/d'
+}
+
+# @param1: don't print version number if param1 is noinstalledversion
+_pretty_print_list() {
+    local noinstalledversion=
+    if [[ "$1" == "noinstalledversion" ]]
+    then
+        local noinstalledversion=1
+    fi
+    while read line
+    do
+        local name="$(echo "$line" | _filter_name)"
+        local ver="$(echo "$line" | _filter_ver)"
+        local installed=
+        if [ -z "$noinstalledversion" ]
+        then
+            _is_installed "$name" && installed=" [installed $(_installed_version "$name")]"
+        else
+            _is_installed "$name" && installed=" [installed]"
+        fi
+
+        local desc="$(echo "$line" | _filter_desc_only)"
+        local col=$(( COL - 4 ))
+        local desc="$( echo "$desc" | fmt -w "$col" | awk '{print "    " $0}' )"
+        echo $(_pkg $name) $(_hl_green $ver)$(_hl_purple "$installed")
+        echo "$desc"
+    done
+}
+
+jumbo_action_list() {
+    _desc "List all installed packages" || return 0
+    _usage "list [pattern ...]" || return 0
+    if [ -z "$1" ]
+    then
+        cat "$JUMBO_INSTALLED_LIST" | sort | _pretty_print_list noinstalledversion
+        return
+    fi
+
+    local GREP_PARAM=
+    for i in "$@"
+    do
+        GREP_PARAM="$GREP_PARAM|($i)"
+    done
+    GREP_PARAM=${GREP_PARAM:1}
+
+    local pkgs=$(_get_desc | grep -i -E "$GREP_PARAM" | cut -d " " -f 1)
+
+    GREP_PARAM2=
+    for i in $pkgs
+    do
+        GREP_PARAM2="$GREP_PARAM2|(^$i	)"
+    done
+    GREP_PARAM2=${GREP_PARAM2:1}
+    [ -z "$GREP_PARAM2" ] && _notice "No package found" && exit 1
+    cat "$JUMBO_INSTALLED_LIST" | sort | grep -E "$GREP_PARAM2" | _pretty_print_list noinstalledversion
+}
+
+jumbo_action_search() {
+    _desc "Search for packages, or list all packages available" || return 0
+    _usage "search [pattern ...]" || return 0
+    if [ -z "$1" ]
+    then
+        _fetch | _pretty_print_list
+        return
+    fi
+
+    local GREP_PARAM=
+    for i in "$@"
+    do
+        GREP_PARAM="$GREP_PARAM|($i)"
+    done
+    GREP_PARAM=${GREP_PARAM:1}
+
+    local pkgs=$(_get_desc | grep -i -E "$GREP_PARAM" | cut -d " " -f 1)
+
+    GREP_PARAM2=
+    for i in $pkgs
+    do
+        GREP_PARAM2="$GREP_PARAM2|(^$i	)"
+    done
+    GREP_PARAM2=${GREP_PARAM2:1}
+    [ -z "$GREP_PARAM2" ] && _notice "No package found" && exit 1
+    _fetch | grep -E "$GREP_PARAM2" | _pretty_print_list
+}
+
+jumbo_action_install() {
+    _desc "Install packages" || return 0
+    _usage "install package-name [package-name ...]" || return 0
+    if [ -z "$1" ]
+    then
+        _show_help "$CMD"
+        exit 1
+    fi
+    # check if package already installed
+    # check package existence
+    for i in $@
+    do
+        (_fetch | _get_by_name $i || _fatal "Package $(_pkg $i) could not be found, exiting...") >/dev/null || exit 1
+        _is_installed $i && _warning "Package $(_pkg $i) is already installed"
+    done
+
+    # filter out installed packages
+    if [ -z "$JUMBO_FORCE" ]
+    then
+        install_list=$( _param_to_lines "$@" | _filter_out_installed )
+    else
+        install_list=$( _param_to_lines "$@" )
+    fi
+    if (( $(echo "$install_list" | sed '/^$/d' | wc -l) == 0 ))
+    then
+        _notice "All packages has been installed, nothing else to do.."
+        _notice "exiting.."
+        _add_to_manual_install "$@"
+        exit
+    fi
+
+
+    # check deps
+    _notice "Calculating dependencies...."
+    deps=$(_get_all_deps "$install_list" )
+    if [ -z "$JUMBO_FORCE" ]
+    then
+        deps=$(echo "$deps" | _filter_out_installed)
+    else
+        deps=$(echo "$deps" | _filter_out_installed_but_keep $@)
+    fi
+
+    if (( $(echo "$deps" | sed '/^$/d' | wc -l) == 0 ))
+    then
+        _notice "All packages has been installed, nothing else to do.."
+        _notice "exiting.."
+        _add_to_manual_install "$@"
+        exit
+    fi
+
+    _notice "Packages to be installed:"
+    _trace $(_pkg $deps)
+
+    # TODO acquire lock
+    # TODO write things to be done for transactional
+
+    # fetch packages
+    for i in $deps
+    do
+        #install here
+        if ! _is_installed "$i"
+        then
+            _install_one_package $(_fetch | _get_by_name $i | _filter_install)
+        else
+            _update_one_package $(_fetch | _get_by_name $i | _filter_install)
+        fi
+    done
+
+    # update manual install list
+    _add_to_manual_install "$@"
+
+    # TODO release lock
+
+    # inform users that everything is done
+    _notice "Installation done."
+}
+
+jumbo_action_remove() {
+    _desc "Uninstall pacakges" || return 0
+    _usage "remove package-name [package-name ...]" || return 0
+    #check if package is installed
+    if [ -z "$1" ]
+    then
+        _show_help "$CMD"
+        exit 1
+    fi
+
+    unset SED_PARAM
+    for i in "$@"
+    do
+        _is_installed $i || _fatal "Package $(_pkg $i) is not installed, cannot remove!"
+        SED_PARAM=("${SED_PARAM[@]}" "-e" "/^$i	/d")
+    done
+
+    # check if the packages are depended by other packages
+    # if they are depended then cannot remove
+    local filtered_list=$(cat "$JUMBO_INSTALLED_LIST" | sed "${SED_PARAM[@]}")
+    local deps_remain=$(echo "$filtered_list" | _filter_depend | _split_depend | sort | uniq | sed '/^$/d')
+
+    local still_depended=$( (_param_to_lines "$@" && echo "$deps_remain") | sort | uniq -d | sed '/^$/d' )
+    if [[ -z "$JUMBO_FORCE" && -n "$still_depended" ]]
+    then
+        local processed_list=$(echo "$filtered_list" | awk 'BEGIN{FS="\t"} {print "=" $1; split($5, deps, " "); for(i in deps) print deps[i];}')
+        for i in $still_depended
+        do
+            local depender_list=$( echo "$processed_list" | awk "/^=/{cur = \$0;} /^$i\$/{print substr(cur,2);}" )
+            _warning "$(_pkg $i) is still depended by: $(_pkg $depender_list)"
+        done
+        _fatal "Cannot remove packages: $(_pkg $still_depended) , exiting..."
+    fi
+
+    for i in "$@"
+    do
+        _remove_one_package $i
+    done
+
+    _notice "Done."
+    _remove_from_manual_install "$@"
+
+    local unused_packages=$(_find_unused_packages)
+
+    if [ -n "$unused_packages" ]
+    then
+        _notice "These packages are no longer depended, you may clean them:"
+        _trace $(_pkg $unused_packages)
+    fi
+
+}
+
+jumbo_action_update() {
+    _desc "Update packages" || return 0
+    _usage "update [package-name ...]" || return 0
+    rm -f "$JUMBO_CACHE_LIST"
+
+    for i in "$@"
+    do
+        _is_installed $i || _fatal "Package $(_pkg $i) is not installed, cannot update!"
+    done
+
+    if [ -z "$1" ]
+    then
+        local update_list=$(cat "$JUMBO_INSTALLED_LIST" | _filter_name | _filter_out_latest)
+    else
+        local update_list=$(_param_to_lines "$@" | _filter_out_latest)
+    fi
+
+    local update_count=$(echo "$update_list" | sed '/^$/d' | wc -l)
+    if ((update_count == 0))
+    then
+        if [ -z "$1" ]
+        then
+            _notice "All packages are up to date"
+        else
+            if [ -z "$2" ]
+            then
+                _notice "Package $(_pkg $@) is up to date"
+            else
+                _notice "Packages $(_pkg $@) are all up to date"
+            fi
+        fi
+        return
+    fi
+    # checking for dependencies
+    deps=$(_get_all_deps "$update_list" )
+    deps=$(echo "$deps" | _filter_out_latest)
+    _notice "Packages to be updated:"
+    _trace $(_pkg $deps)
+
+    for i in $deps
+    do
+        #update here
+        if _is_installed "$i"
+        then
+            _notice "Updating $(_pkg $i)..."
+            _update_one_package $(_fetch | _get_by_name $i | _filter_install)
+            _notice "Package $(_pkg $i) updated!"
+        else
+            _notice "Installing $(_pkg $i)..."
+            _install_one_package "$(_fetch | _get_by_name $i | _filter_install)"
+            _notice "Package $(_pkg $i) installed!"
+        fi
+    done
+    _notice "Update done."
+}
+
+jumbo_action_check() {
+    _desc "Check for updates, force update repo data" || return 0
+    _usage "check" || return 0
+    rm -f "$JUMBO_CACHE_LIST"
+
+    local update_list=$(cat "$JUMBO_INSTALLED_LIST" | _filter_name | _filter_out_not_installed | _filter_out_latest)
+    local update_count=$(echo "$update_list" | sed '/^$/d' | wc -l)
+    if ((update_count == 0))
+    then
+        _notice "All packages are up to date"
+        return
+    fi
+    _notice "Update for following packages are available:"
+    _trace $(_pkg $update_list)
+}
+
+jumbo_action_local_install() {
+    _desc "Install packages from local install file" || return 0
+    _usage "local-install jam-file [jam-file ...]" || return 0
+    JUMBO_USE_LOCAL_FILE=1
+    if [ -z "$1" ]
+    then
+        _show_help "$CMD"
+        exit 1
+    fi
+
+    # get namelist for all packages
+    names=$(for i in "$@"
+    do
+        (
+            [ -f "$i" ] || _fatal "File '$i' does not exists!"
+            . $i
+            echo $pkgname
+        )
+    done) || exit 1
+
+    # check for dependency on every package
+    deplist=$(
+    for i in "$@"
+    do
+        (
+            [ -f "$i" ] || _fatal "File '$i' does not exists!"
+            . $i
+            # check for package name and filename
+            pkgname_expected=${i##*/}
+            pkgname_expected=${pkgname_expected%.jumbo}
+            [ "$pkgname_expected" == "$pkgname" ] || _fatal "Invalid pkgname in file $i, $(_pkg $pkgname) seen, $(_pkg $pkgname_expected) expected"
+            echo -n "$pkgname	$i	"
+            count=0
+            for dep in ${depends[@]}
+            do
+                _is_installed $dep || (echo "$names" | grep "^$dep$" &>/dev/null) || _fatal "Dependency not met for $(_pkg $i), $(_pkg $dep) is not installed"
+                (echo "$names" | grep "^$dep$" &>/dev/null) && echo -n "$dep	"
+            done
+            echo
+        ) || _fatal "Package check failed"
+    done
+    ) || _fatal "Exiting.."
+
+    install_seq=$(
+    echo "$deplist" | sed '/^$/d' | awk '
+    BEGIN{FS="\t"; count=0}
+
+    {
+        dep_count = NF-2;
+        name = $1;
+        for(i=0; i<dep_count; i++){
+            g_dep[name i] = $(i+2);
+        }
+        num = 1;
+        file = $2;
+        g_file[name] = file;
+        g_num[name] = num;
+        g_depcount[name] = dep_count;
+        g_list[count] = name;
+        count++;
+    }
+    
+    END {
+        //check to see which is more dependant
+        for(i=0; i<=count; i++) {
+            changed = 0;
+            for(j=0; j<count; j++) {
+                curname = g_list[j];
+                num = 1;
+                for(k=0; k<g_depcount[curname]; k++) {
+                    num += g_num[g_dep[curname k]];
+                }
+                if (num != g_num[curname]) {
+                    changed = 1;
+                    g_num[curname] = num;
+                }
+            }
+            if (changed == 0) break;
+        }
+        if (changed == 1) {
+            exit 1;
+        }
+        //sort now
+        for(i=0; i<count; i++) {
+            for(j=1; j<count-i; j++) {
+                if(g_num[g_list[j-1]] > g_num[g_list[j]]) {
+                    temp = g_list[j];
+                    g_list[j] = g_list[j-1];
+                    g_list[j-1] = temp;
+                }
+            }
+        }
+        //output result
+        for(i=0; i<count; i++) {
+            print g_file[g_list[i]];
+        }
+    }' || _fatal "Circular dependency detected"
+    ) || exit 1
+
+    # install starting from least dependant package
+    echo "$install_seq" | sed '/^$/d' | while read line
+    do
+        local name=$( . "$line"; echo $pkgname )
+        if ! _is_installed $name
+        then
+            _install_one_package "$line"
+        else
+            _update_one_package "$line"
+        fi
+        _add_to_manual_install $name
+    done || exit 1
+    _notice "Installation done."
+}
+
+jumbo_action_clean() {
+    _desc "Clean unused packages" || return 0
+    _usage "list" || return 0
+    local unused_packages=$(_find_unused_packages)
+
+    if [ -z "$unused_packages" ]
+    then
+        _notice "No package to be cleaned."
+        return
+    fi
+
+    _notice "Packages to be cleaned:"
+    _trace $(_pkg $unused_packages)
+    
+    echo "$unused_packages" | sed '/^$/d' | while read i
+    do
+        _remove_one_package $i
+    done
+    _notice "Done."
+}
+
+jumbo_action_check_unused() {
+    _desc "Check for unused packages" || return 0
+    _usage "check-unused" || return 0
+    local unused_packages=$(_find_unused_packages)
+
+    if [ -z "$unused_packages" ]
+    then
+        _notice "No package to be cleaned."
+        return
+    fi
+
+    _notice "Packages to be cleaned:"
+    _trace $(_pkg $unused_packages)
+}
+
+jumbo_action_list_files() {
+    _desc "List installed files of a package" || return 0
+    _usage "list-files package-name" || return 0
+    if [ -z "$1" ]
+    then
+        _show_help "$CMD"
+        exit 1
+    fi
+
+    if ! _is_installed "$1"
+    then
+        _fatal "Package $(_pkg $1) not installed!"
+    fi
+
+    cat $JUMBO_FILES_LIST/$1 | sed 's/^./\${JUMBO_ROOT}/'
+}
+
+if [ -z "$JUMBO_INCLUDE" ]
+then
+    # move it here so that does not interfere with scripts that sourced jumbo
+    export JUMBO_ROUTE_SHOW_DESC=
+    export JUMBO_ROUTE_SHOW_USAGE=
+    # preserve original argv
+    ORIG_ARGV=("$@")
+
+    # options parsing
+    set -- $(getopt vfr:p:nu "$@")
+    while [ $# -gt 0 ]
+    do
+        case "$1" in
+            (-v) export JUMBO_VERBOSE=$((JUMBO_VERBOSE + 1));;
+            (-f) export JUMBO_FORCE=$((JUMBO_FORCE + 1));;
+            (-r) export JUMBO_ROOT="$2"; export JUMBO_FORCE_ROOT="$2"; shift;;
+            (-p) export JUMBO_FORCE_REPO="$2"; shift;;
+            (-n) export JUMBO_NO_LOAD_CONF=$((JUMBO_NO_LOAD_CONF + 1));;
+            (-u) export JUMBO_NO_AUTO_UPDATE=$((JUMBO_NO_AUTO_UPDATE + 1));;
+            (--) shift; break;;
+            (-*) _fatal "Unrecognized option $1";;
+            (*)  break;;
+        esac
+        shift
+    done
+
+    # get JUMBO_ROOT from path instead of environment variable
+    JUMBO_BIN_DIR=
+    if [ -z "$JUMBO_FORCE_ROOT" ]
+    then
+        if (( $(expr index "$0" /) > 0 ))
+        then
+            JUMBO_BIN_DIR="$(dirname "$0" 2>/dev/null)"
+        else
+            JUMBO_BIN_DIR="$(dirname "$(which --skip-alias --skip-functions "$0" 2>/dev/null)" 2>/dev/null)"
+        fi
+        if [[ -n "$JUMBO_BIN_DIR" && -d "$JUMBO_BIN_DIR/../$DEFAULT_JUMBO_DIR" ]]
+        then
+            export JUMBO_ROOT=$(cd "$JUMBO_BIN_DIR/.." &>/dev/null; pwd)
+        fi
+    fi
+    export PATH="$JUMBO_ROOT/bin:$PATH"
+
+    # detect if jumbo is installed
+    if [[ -z "$JUMBO_ROOT" || ! -d "$JUMBO_ROOT" ]]
+    then
+        _fatal "jumbo is not installed on your system"
+    fi
+
+    # initialization
+    TMP_DIR=
+    [[ -z "$JUMBO_NO_LOAD_CONF" && -f "$JUMBO_ROOT/$DEFAULT_JUMBO_CONF" ]] && . "$JUMBO_ROOT/$DEFAULT_JUMBO_CONF"
+    [ -n "$JUMBO_FORCE_ROOT" ] && JUMBO_ROOT="$JUMBO_FORCE_ROOT"
+    [ -n "$JUMBO_FORCE_REPO" ] && JUMBO_REPO="$JUMBO_FORCE_REPO"
+
+    #JUMBO_DIR is the location of jumbo's conf dir
+    JUMBO_DIR="$JUMBO_ROOT/$DEFAULT_JUMBO_DIR"
+
+    JUMBO_FILES_LIST="$JUMBO_DIR/files"
+    JUMBO_INSTALLED_LIST="$JUMBO_DIR/installed_list"
+    JUMBO_MANUAL_INSTALL_LIST="$JUMBO_DIR/manual_install"
+    JUMBO_REPO_INSTALLS="$JUMBO_DIR/repo"
+    JUMBO_LOCAL_INSTALLS="$JUMBO_DIR/local"
+    JUMBO_DOWNLOADS="$JUMBO_DIR/downloads"
+    JUMBO_INSTALL_LOG="$JUMBO_DIR/log"
+    JUMBO_TMP_DIR="$JUMBO_DIR/tmp"
+    JUMBO_BACKUP_DIR="$JUMBO_DIR/backups"
+    JUMBO_REPO_CONF_FILE="$JUMBO_ROOT/etc/jumbo-repo.conf"
+
+    # get all repo from jumbo-repo.conf if not specified in arguments
+    if [[ -z "$JUMBO_FORCE_REPO" && -f "$JUMBO_REPO_CONF_FILE" ]]
+    then
+        while read line
+        do
+            JUMBO_REPO=("${JUMBO_REPO[@]}" "$line")
+        done < "$JUMBO_REPO_CONF_FILE"
+    fi
+
+    # we need to specify different JUMBO_CACHE_LIST for different repos
+    # so that the cache works correctly
+    JUMBO_CACHE_LIST="$JUMBO_DIR/lists/$( ( for i in "${JUMBO_REPO[@]}"; do echo $i; done ) | sort -u | md5sum | cut -d' ' -f1 )"
+
+    JUMBO_UID=$( (hostname && whoami) | md5sum | cut -d ' ' -f 1 )
+
+    #number of columns for pretty printing
+    COL=80
+
+    #runtime configuration
+    JUMBO_USE_LOCAL_FILE=0
+
+    which stty &> /dev/null && COL=$(stty size | cut -d ' ' -f 2)
+
+    ## environment initialization to prevent error...
+    mkdir -p "$JUMBO_DIR"
+    mkdir -p "$JUMBO_FILES_LIST"
+    [ ! -f "$JUMBO_INSTALLED_LIST" ] && touch "$JUMBO_INSTALLED_LIST"
+    [ ! -f "$JUMBO_MANUAL_INSTALL_LIST" ] && touch "$JUMBO_MANUAL_INSTALL_LIST"
+    mkdir -p "$JUMBO_REPO_INSTALLS"
+    mkdir -p "$JUMBO_LOCAL_INSTALLS"
+    mkdir -p "$JUMBO_DOWNLOADS"
+    mkdir -p "$JUMBO_INSTALL_LOG"
+    mkdir -p "$JUMBO_TMP_DIR"
+    mkdir -p "$JUMBO_BACKUP_DIR"
+
+    # try to update self first
+    if [[ -z "$JUMBO_NO_AUTO_UPDATE" ]] && _is_installed jumbo && ! _is_latest jumbo
+    then
+        _notice "New version of jumbo found, trying to update..."
+        _update_one_package $(_fetch | _get_by_name jumbo | _filter_install)
+        _notice "Jumbo updated to the latest version."
+        "$0" "${ORIG_ARGV[@]}" || true
+        exit
+    fi
+
+    # real actions
+    PROG=$0
+    _route "$@"
+
+    #cleanup
+    if [ -d "$TMP_DIR" ]
+    then
+        rm -rf "$TMP_DIR"
+    fi
+fi
+
+# vim:set ft=sh ts=4 sw=4 et:

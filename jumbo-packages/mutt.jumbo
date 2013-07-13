@@ -1,0 +1,43 @@
+pkgname=mutt
+pkgver=1.5.21
+pkgrel=2
+pkgdesc='Small but very powerful text-based mail client'
+backups=('etc/Muttrc')
+depends=('ncurses' 'openssl') # missdepends=('gpgme' 'libsasl' 'gdbm' 'libidn' 'mime-types' 'krb5')
+sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tar.gz"
+         "${JUMBO_REPO}/packages/${pkgname}/pop-cachedir.patch"
+         "${JUMBO_REPO}/packages/${pkgname}/crypt-gpgme.patch")
+md5sums=('a29db8f1d51e2f10c070bf88e8a553fd'
+         '7df7780d8bbdcbad1eb0d673de9976b2'
+         '6cb5b3ca56bd03c00c6768864070a2d4')
+
+jumbo_install() {
+  cd "${srcdir}/${pkgname}-${pkgver}"
+
+  patch -i ../pop-cachedir.patch # FS#31536
+  patch -p1 -i ../crypt-gpgme.patch # FS#31735
+  ./configure \
+	  --prefix="${JUMBO_ROOT}" \
+	  --sysconfdir="${JUMBO_ROOT}/etc" \
+	  --enable-pop \
+	  --enable-imap \
+	  --enable-smtp \
+	  --enable-hcache \
+	  --with-curses="${JUMBO_ROOT}" \
+	  --with-regex \
+	  --with-gss \
+	  --with-ssl="${JUMBO_ROOT}" \
+	  --with-sasl \
+	  --with-idn \
+          --with-mailpath="${JUMBO_ROOT}/var/mail"
+          #--enable-gpgme \
+  make
+  make DESTDIR="${pkgdir}" install
+
+  rm "${pkgdir}/${JUMBO_ROOT}"/bin/{flea,muttbug}
+  rm "${pkgdir}/${JUMBO_ROOT}"/share/man/man1/{flea,muttbug}.1
+  rm "${pkgdir}/${JUMBO_ROOT}"/etc/mime.types{,.dist}
+  install -Dm644 contrib/gpg.rc "${pkgdir}"/etc/Muttrc.gpg.dist
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

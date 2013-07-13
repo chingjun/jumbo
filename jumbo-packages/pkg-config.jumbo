@@ -1,0 +1,20 @@
+pkgname=pkg-config
+pkgver=0.28
+pkgrel=1
+pkgdesc="A system for managing library compile/link flags"
+depends=() # missdepends=('glib2')
+sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tar.gz"
+         "${JUMBO_REPO}/packages/${pkgname}/internal-glib-check-pr-set-name.patch")
+md5sums=('aa3c86e67551adc3ac865160e34a2a0d'
+         'e94ae530f8ddc608102e2df23840841f')
+
+jumbo_install() {
+  cd "${srcdir}/${pkgname}-${pkgver}"
+
+  (cd glib && patch -p1 -i "${srcdir}/internal-glib-check-pr-set-name.patch")
+  ./configure --prefix="${JUMBO_ROOT}" --with-internal-glib
+  make
+  make DESTDIR="${pkgdir}" install
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

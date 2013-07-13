@@ -1,0 +1,33 @@
+pkgname=ccache
+pkgver=3.1.9
+pkgrel=1
+pkgdesc="A compiler cache"
+arch=('i686' 'x86_64')
+depends=('zlib') # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tar.bz2")
+md5sums=('65f48376a91d3651d6527ca568858be8')
+
+jumbo_install() {
+  cd "${srcdir}/${pkgname}-${pkgver}"
+
+  ./configure --prefix="${JUMBO_ROOT}"
+  make
+  install -Dm 755 ccache "${pkgdir}/${JUMBO_ROOT}/bin/ccache"
+  install -Dm 644 ccache.1 "${pkgdir}/${JUMBO_ROOT}/share/man/man1/ccache.1"
+
+  install -d "${pkgdir}/${JUMBO_ROOT}/lib/ccache/bin"
+  ln -sf "${JUMBO_ROOT}/bin/ccache" "${pkgdir}/${JUMBO_ROOT}/lib/ccache/bin/cc"
+  ln -sf "${JUMBO_ROOT}/bin/ccache" "${pkgdir}/${JUMBO_ROOT}/lib/ccache/bin/gcc"
+  ln -sf "${JUMBO_ROOT}/bin/ccache" "${pkgdir}/${JUMBO_ROOT}/lib/ccache/bin/g++"
+  ln -sf "${JUMBO_ROOT}/bin/ccache" "${pkgdir}/${JUMBO_ROOT}/lib/ccache/bin/cpp"
+  ln -sf "${JUMBO_ROOT}/bin/ccache" "${pkgdir}/${JUMBO_ROOT}/lib/ccache/bin/c++"
+
+  CHOST='x86_64-unknown-linux-gnu'
+  ln -sf "${JUMBO_ROOT}/bin/ccache" "${pkgdir}/${JUMBO_ROOT}/lib/ccache/bin/${CHOST}-cc"
+  ln -sf "${JUMBO_ROOT}/bin/ccache" "${pkgdir}/${JUMBO_ROOT}/lib/ccache/bin/${CHOST}-gcc"
+  ln -sf "${JUMBO_ROOT}/bin/ccache" "${pkgdir}/${JUMBO_ROOT}/lib/ccache/bin/${CHOST}-g++"
+  ln -sf "${JUMBO_ROOT}/bin/ccache" "${pkgdir}/${JUMBO_ROOT}/lib/ccache/bin/${CHOST}-cpp"
+  ln -sf "${JUMBO_ROOT}/bin/ccache" "${pkgdir}/${JUMBO_ROOT}/lib/ccache/bin/${CHOST}-c++"
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

@@ -1,0 +1,16 @@
+pkgname=nmon
+pkgver=14g
+pkgrel=1
+pkgdesc="AIX & Linux Performance Monitoring tool"
+depends=('ncurses') # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/lmon$pkgver.c")
+md5sums=('e537f51446fb375140368b115dc8278b')
+
+jumbo_install() {
+  cd "${srcdir}/"
+
+  cc -o nmon lmon$pkgver.c -g -O2 -D JFS -D GETUSER -Wall -D LARGEMEM -lncurses -g
+  install -D -m755 nmon "${pkgdir}/${JUMBO_ROOT}/bin/nmon"
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

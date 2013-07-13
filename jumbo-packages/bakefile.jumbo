@@ -1,0 +1,19 @@
+pkgname=bakefile
+pkgver=0.2.9
+pkgrel=2
+pkgdesc="A cross-platform, cross-compiler native makefiles generator"
+depends=('python')
+sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tar.gz")
+md5sums=('b53813d155df1a45371abc8f781e6d88')
+
+jumbo_install() {
+  cd "${srcdir}/${pkgname}-${pkgver}"
+
+  PYTHON="${JUMBO_ROOT}/bin/python" ./configure --prefix="${JUMBO_ROOT}"
+  make
+  make DESTDIR="${pkgdir}" install
+  ln -sf ../lib/bakefile/bakefile.py "${pkgdir}/${JUMBO_ROOT}/bin/bakefile"
+  ln -sf ../lib/bakefile/bakefile_gen.py "${pkgdir}/${JUMBO_ROOT}/bin/bakefile_gen"
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

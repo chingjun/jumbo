@@ -1,0 +1,13 @@
+pkgname=ack
+pkgver=1.96
+pkgrel=1
+pkgdesc="A Perl-based grep replacement, aimed at programmers with large trees of heterogeneous source code"
+depends=() # missdepends=('perl')
+sources=("${JUMBO_REPO}/packages/${pkgname}/ack-standalone-${pkgver}")
+md5sums=('d1719df0d06b3b3913ebbd10c4575673')
+
+jumbo_install() {
+  install -Dm755 "${srcdir}/ack-standalone-${pkgver}" "${pkgdir}/${JUMBO_ROOT}/bin/ack"
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

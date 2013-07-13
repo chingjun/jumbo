@@ -1,0 +1,19 @@
+pkgname=axel
+pkgver=2.4
+pkgrel=1
+pkgdesc="Light Unix download accelerator"
+depends=() # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tar.bz2")
+md5sums=('5fd72e67a682d20874b9f6d073201c6a')
+
+jumbo_install() {
+  cd "${srcdir}/${pkgname}-${pkgver}"
+
+  ./configure --prefix="${JUMBO_ROOT}" \
+      --mandir="${JUMBO_ROOT}/share/man" \
+      --strip=0 --i18n=0
+  make
+  make DESTDIR="${pkgdir}" install
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

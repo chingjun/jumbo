@@ -1,0 +1,16 @@
+pkgname=chrpath
+pkgver=0.13
+pkgrel=1
+pkgdesc="Change or delete the rpath or runpath in ELF files"
+depends=() # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tar.gz")
+md5sums=('b73072a8fbba277558c50364b65bb407')
+
+jumbo_install() {
+  cd "${srcdir}/$pkgname-$pkgver"
+  ./configure --prefix="${JUMBO_ROOT}" --mandir="${JUMBO_ROOT}/share/man"
+  make
+  make DESTDIR="${pkgdir}" docdir="${JUMBO_ROOT}/share/doc/chrpath" install
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

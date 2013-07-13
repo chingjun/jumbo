@@ -1,0 +1,20 @@
+pkgname=m4
+pkgver=1.4.16
+pkgrel=2
+pkgdesc="The GNU macro processor"
+depends=('xz') # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tar.xz")
+md5sums=('7548ec061a1ba993790159764f522d0e')
+
+jumbo_install() {
+  cd "${srcdir}"
+  xz -c -d "${pkgname}-${pkgver}.tar.xz" | tar -x
+
+  cd "${srcdir}/${pkgname}-${pkgver}"
+
+  ./configure --prefix="${JUMBO_ROOT}"
+  make
+  make DESTDIR="${pkgdir}" install
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

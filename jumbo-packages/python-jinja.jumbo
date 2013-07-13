@@ -1,0 +1,16 @@
+pkgname=python-jinja
+_realname=Jinja2
+pkgver=2.6
+pkgrel=1
+pkgdesc="A simple pythonic template language written in Python"
+depends=('python' 'python-distribute' 'python-markupsafe') # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/${_realname}-${pkgver}.tar.gz")
+md5sums=('1c49a8825c993bfdcf55bb36897d28a2')
+
+jumbo_install() {
+  cd "${srcdir}/${_realname}-${pkgver}"
+
+  python setup.py install --prefix="${JUMBO_ROOT}" --root="${pkgdir}" --optimize=1  
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

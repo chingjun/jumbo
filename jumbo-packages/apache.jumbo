@@ -1,0 +1,42 @@
+pkgname=apache
+pkgver=2.2.23
+pkgrel=1
+pkgdesc="A high performance Unix-based HTTP server"
+backups=(etc/httpd/conf/httpd.conf
+         etc/httpd/conf/extra/httpd-{autoindex,dav,default,info,languages}.conf
+         etc/httpd/conf/extra/httpd-{manual,mpm,multilang-errordoc}.conf
+         etc/httpd/conf/extra/httpd-{ssl,userdir,vhosts}.conf)
+depends=('openssl' 'zlib' 'apr-util' 'pcre')
+sources=("${JUMBO_REPO}/packages/${pkgname}/httpd-${pkgver}.tar.bz2"
+         "${JUMBO_REPO}/packages/${pkgname}/jumbo.layout")
+md5sums=('ca133de0e4b4b15316990a97186b9993'
+         '37bde42c03a0a6afab5a149bc60a766e')
+
+jumbo_install() {
+	cd "${srcdir}/httpd-${pkgver}"
+
+  cat "${srcdir}/jumbo.layout" | sed -e "s|#JUMBO_ROOT#|${JUMBO_ROOT}|" >> config.layout
+
+  ./configure --enable-layout=jumbo \
+    --enable-modules=all \
+    --enable-mods-shared=all \
+    --enable-so \
+    --enable-cache --enable-disk-cache --enable-mem-cache --enable-file-cache \
+    --enable-ssl --with-ssl \
+    --enable-deflate --enable-cgid \
+    --enable-proxy --enable-proxy-connect \
+    --enable-proxy-http --enable-proxy-ftp \
+    --enable-dbd \
+    --with-apr="${JUMBO_ROOT}/bin/apr-1-config" \
+    --with-apr-util="${JUMBO_ROOT}/bin/apu-1-config" \
+    --with-pcre="${JUMBO_ROOT}"
+  make
+  make DESTDIR="${pkgdir}" install
+
+  # cleanup
+  rm -rf "${pkgdir}/${JUMBO_ROOT}/share/httpd/manual"
+  rm -rf "${pkgdir}/${JUMBO_ROOT}/etc/httpd/conf/original"
+  rm -rf "${pkgdir}/${JUMBO_ROOT}"/srv/http/*
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

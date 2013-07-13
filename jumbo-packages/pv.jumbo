@@ -1,0 +1,17 @@
+pkgname=pv
+pkgver=1.4.6
+pkgrel=1
+pkgdesc='A terminal-based tool for monitoring the progress of data through a pipeline.'
+depends=() # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tar.bz2")
+md5sums=('d55ff76f5caa83efc23aa527dbb0b191')
+
+jumbo_install() {
+  cd "${srcdir}/${pkgname}-${pkgver}"
+
+  ./configure --prefix="${JUMBO_ROOT}" --mandir="${JUMBO_ROOT}/share/man"
+  make
+  make DESTDIR="${pkgdir}" install
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

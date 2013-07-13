@@ -1,0 +1,17 @@
+pkgname=ipython
+pkgver=0.13.1
+pkgrel=1
+pkgdesc="An enhanced Interactive Python2 shell."
+depends=('python' 'python-distribute') # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tar.gz")
+md5sums=('ca7e75f7c802afc6aaa0a1ea59846420')
+
+jumbo_install() {
+  cd "${srcdir}/${pkgname}-${pkgver}"
+
+  python setup.py install \
+    --prefix="${JUMBO_ROOT}" \
+    --root="${pkgdir}"
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

@@ -1,0 +1,17 @@
+pkgname=emacs-auto-complete
+pkgver=1.3.1
+pkgrel=1
+pkgdesc="The most intelligent auto-completion extension for GNU Emacs"
+depends=('emacs') # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tar.bz2")
+md5sums=('c6273d7d327f8cb11af88e09cc0cc1ea')
+
+jumbo_install() {
+  cd "${srcdir}/${pkgname}-${pkgver}"
+
+  make byte-compile
+  mkdir -p ${pkgdir}/${JUMBO_ROOT}/share/emacs/site-lisp
+  DIR="${pkgdir}/${JUMBO_ROOT}/share/emacs/site-lisp" make install
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

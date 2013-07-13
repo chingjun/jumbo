@@ -1,0 +1,78 @@
+pkgname=mysql
+pkgbase=mysql
+pkgver=5.5.30
+pkgrel=1
+pkgdesc="A fast SQL database server, with client tools"
+depends=('libmysqlclient' 'cmake' 'zlib' 'openssl') # missdepends = ()
+backups=('etc/mysql/my.cnf')
+sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgbase}-${pkgver}.tar.gz")
+md5sums=('f0cdd56f89e781e800cf223bd9edd00c')
+
+jumbo_install() {
+  cd "${srcdir}"
+  mkdir build
+  cd build
+
+  # CFLAGS/CXXFLAGS as suggested upstream
+
+  cmake ../${pkgbase}-${pkgver} \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=${JUMBO_ROOT} \
+    -DSYSCONFDIR=${JUMBO_ROOT}/etc/mysql \
+    -DMYSQL_DATADIR=${JUMBO_ROOT}/var/lib/mysql \
+    -DMYSQL_UNIX_ADDR=${JUMBO_ROOT}/var/run/mysqld/mysqld.sock \
+    -DDEFAULT_CHARSET=utf8 \
+    -DDEFAULT_COLLATION=utf8_general_ci \
+    -DENABLED_LOCAL_INFILE=ON \
+    -DINSTALL_INFODIR=share/mysql/docs \
+    -DINSTALL_MANDIR=share/man \
+    -DINSTALL_PLUGINDIR=lib/mysql/plugin \
+    -DINSTALL_SCRIPTDIR=bin \
+    -DINSTALL_INCLUDEDIR=include/mysql \
+    -DINSTALL_DOCREADMEDIR=share/mysql \
+    -DINSTALL_SUPPORTFILESDIR=share/mysql \
+    -DINSTALL_MYSQLSHAREDIR=share/mysql \
+    -DINSTALL_DOCDIR=share/mysql/docs \
+    -DINSTALL_SHAREDIR=share/mysql \
+    -DWITH_READLINE=ON \
+    -DWITH_ZLIB=system \
+    -DWITH_SSL=system \
+    -DWITH_LIBWRAP=OFF \
+    -DWITH_MYSQLD_LDFLAGS="${LDFLAGS}" \
+    -DWITH_EXTRA_CHARSETS=complex \
+    -DWITH_EMBEDDED_SERVER=ON \
+    -DWITH_INNOBASE_STORAGE_ENGINE=1 \
+    -DWITH_PARTITION_STORAGE_ENGINE=1 \
+    -DWITHOUT_EXAMPLE_STORAGE_ENGINE=1 \
+    -DWITHOUT_ARCHIVE_STORAGE_ENGINE=1 \
+    -DWITHOUT_BLACKHOLE_STORAGE_ENGINE=1 \
+    -DWITHOUT_FEDERATED_STORAGE_ENGINE=1 \
+    -DCMAKE_C_FLAGS="-fPIC ${CFLAGS} ${CPPFLAGS} -fno-strict-aliasing -DBIG_JOINS=1 -fomit-frame-pointer" \
+    -DCMAKE_CXX_FLAGS="-fPIC ${CXXFLAGS} ${CPPFLAGS} -fno-strict-aliasing -DBIG_JOINS=1 -felide-constructors -fno-rtti" \
+    -DCMAKE_INSTALL_RPATH=${JUMBO_ROOT}/lib \
+    -DCMAKE_INSTALL_RPATH_USE_LINK_PATH=TRUE
+
+  make
+  make DESTDIR="${pkgdir}" install
+
+  install -Dm644 "${pkgdir}/${JUMBO_ROOT}"/share/mysql/my-huge.cnf "${pkgdir}/${JUMBO_ROOT}"/etc/mysql/my.cnf
+
+  # provided by libmysqlclient
+  rm "${pkgdir}/${JUMBO_ROOT}"/bin/{mysql_config,mysql_client_test_embedded,mysqltest_embedded}
+  rm "${pkgdir}/${JUMBO_ROOT}"/lib/libmysql*
+  rm -r "${pkgdir}/${JUMBO_ROOT}"/include/
+  rm "${pkgdir}/${JUMBO_ROOT}"/share/man/man1/{mysql_config,mysql_client_test_embedded,mysqltest_embedded}.1
+
+  # not needed
+  rm -r "${pkgdir}/${JUMBO_ROOT}"/{data,mysql-test,sql-bench}
+  rm "${pkgdir}/${JUMBO_ROOT}"/share/man/man1/mysql-test-run.pl.1
+
+  install -dm700 "${pkgdir}/${JUMBO_ROOT}"/var/lib/mysql
+  install -dm700 "${pkgdir}/${JUMBO_ROOT}"/var/run/mysqld
+}
+
+jumbo_post_install() {
+  ${JUMBO_ROOT}/bin/mysql_install_db --basedir=${JUMBO_ROOT} --datadir=${JUMBO_ROOT}/var/lib/mysql
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

@@ -1,0 +1,16 @@
+pkgname=python-markupsafe
+_realname=MarkupSafe
+pkgver=0.15
+pkgrel=1
+pkgdesc="Implements a XML/HTML/XHTML Markup safe string for Python"
+depends=('python') # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/${_realname}-${pkgver}.tar.gz")
+md5sums=("4e7c4d965fe5e033fa2d7bb7746bb186")
+
+jumbo_install() {
+  cd "${srcdir}/${_realname}-${pkgver}"
+
+  python setup.py install --prefix="${JUMBO_ROOT}" --root="${pkgdir}" --optimize=1  
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

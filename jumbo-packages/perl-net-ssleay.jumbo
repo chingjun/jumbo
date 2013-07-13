@@ -1,0 +1,22 @@
+pkgname=perl-net-ssleay
+_realname=Net-SSLeay
+pkgver=1.52
+pkgrel=1
+pkgdesc="Perl extension for using OpenSSL"
+depends=('perl' 'openssl') # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/${_realname}-${pkgver}.tar.gz")
+md5sums=('b885d173d5733b103355658aa4b3c60d')
+
+jumbo_install() {
+  cd "${srcdir}/${_realname}-${pkgver}"
+  OPENSSL_PREFIX="${JUMBO_ROOT}" perl Makefile.PL INSTALLDIRS=vendor
+  make DESTDIR="${pkgdir}" install
+
+  # remove perllocal.pod and .packlist
+  find "${pkgdir}" -name .packlist -exec rm {} \;
+  find "${pkgdir}" -name perllocal.pod -exec rm {} \;
+  # remove empty directories
+  find "${pkgdir}" -depth -type d -empty -exec rmdir {} \;
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

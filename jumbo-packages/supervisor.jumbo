@@ -1,0 +1,25 @@
+pkgname=supervisor
+pkgver=3.0a12
+pkgrel=2
+pkgdesc="A system for controlling process state under UNIX"
+depends=('python' 'python-meld3' 'python-distribute') # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tar.gz"
+         "${JUMBO_REPO}/packages/${pkgname}/supervisord.conf")
+md5sums=('eb2ea5a2c3b665ba9277d17d14584a25'
+         'e5f36d59f81e05c4608ba7df4bef1b02')
+
+jumbo_install() {
+  cd "${srcdir}/${pkgname}-${pkgver}"
+
+  python setup.py install --prefix="${JUMBO_ROOT}" --root="${pkgdir}"
+  sed -i 's|JUMBO_ROOT|'"$JUMBO_ROOT"'|g' "$srcdir/supervisord.conf"
+  install -D -m600 "$srcdir/supervisord.conf" "$pkgdir/${JUMBO_ROOT}/etc/supervisord.conf"
+  mkdir -p "$pkgdir/${JUMBO_ROOT}/var/log"
+  mkdir -p "$pkgdir/${JUMBO_ROOT}/var/log/supervisor"
+  mkdir -p "$pkgdir/${JUMBO_ROOT}/var/run"
+  mkdir -p "$pkgdir/${JUMBO_ROOT}/etc/supervisor.d"
+  touch "$pkgdir/${JUMBO_ROOT}/etc/supervisor.d/.placeholder"
+  find "$pkgdir/${JUMBO_ROOT}" -name '*.py' | python -m compileall -f
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

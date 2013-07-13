@@ -1,0 +1,15 @@
+pkgname=python-distribute
+pkgver=0.6.34
+pkgrel=1
+pkgdesc="Easily build and distribute Python packages"
+depends=('python') # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/distribute-${pkgver}.tar.gz")
+md5sums=('4576ab843a6db5100fb22a72deadf56d')
+
+jumbo_install() {
+   cd "${srcdir}/distribute-${pkgver}"
+
+   python setup.py install --root="${pkgdir}" --optimize=1
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

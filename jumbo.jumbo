@@ -1,0 +1,28 @@
+pkgname=jumbo
+pkgver=0.7.0
+pkgrel=1
+pkgdesc="A package management system which allows installation to non-system location"
+depends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}"
+         "${JUMBO_REPO}/packages/${pkgname}/jumbo-complete-${pkgver}.sh"
+         "${JUMBO_REPO}/packages/${pkgname}/jumbo-env-${pkgver}.sh"
+         "${JUMBO_REPO}/packages/${pkgname}/bashrc-${pkgver}"
+         "${JUMBO_REPO}/packages/${pkgname}/jumbo-repo-${pkgver}.conf")
+md5sums=('f1d903ff220e5751238a6070a3b5a71a'
+         '747159701a8cc974a7afe0f27b55e32f'
+         '22767ae18fd4732eed9708ecfcc75105'
+         'b8b8feea8463e791d77285d250e2dc72'
+         '0f1092a844dc564ab17101f039346d3f')
+backups=('etc/jumbo-repo.conf'
+         'etc/jumbo-env.sh')
+
+jumbo_install() {
+  install -Dm755 "${srcdir}/${pkgname}-${pkgver}" "${pkgdir}/${JUMBO_ROOT}/bin/jumbo"
+  install -Dm644 "${srcdir}/jumbo-complete-${pkgver}.sh" "${pkgdir}/${JUMBO_ROOT}/etc/bashrc.d/jumbo-complete.sh"
+  sed -i "s|##JUMBO_ROOT##|${JUMBO_ROOT}|g" "${srcdir}/bashrc-${pkgver}"
+  install -Dm644 "${srcdir}/bashrc-${pkgver}" "${pkgdir}/${JUMBO_ROOT}/etc/bashrc"
+  install -Dm644 "${srcdir}/jumbo-env-${pkgver}.sh" "${pkgdir}/${JUMBO_ROOT}/etc/jumbo-env.sh"
+  install -Dm644 "${srcdir}/jumbo-repo-${pkgver}.conf" "${pkgdir}/${JUMBO_ROOT}/etc/jumbo-repo.conf"
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

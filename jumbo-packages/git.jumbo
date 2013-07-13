@@ -1,0 +1,48 @@
+pkgname=git
+pkgver=1.8.1.4
+pkgrel=1
+pkgdesc="the fast distributed version control system"
+depends=('curl' 'expat' 'perl-error' 'perl' 'openssl' 'pcre'
+         'python'
+         'perl-libwww' 'perl-term-readkey') # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tar.gz"
+         "${JUMBO_REPO}/packages/${pkgname}/${pkgname}-manpages-${pkgver}.tar.gz")
+md5sums=('60f32ef4a6b3fa2143b81a28704333ed'
+         '61d19a9d386c686ee06b493a9df6e61c')
+
+jumbo_install() {
+  cd "${srcdir}/${pkgname}-${pkgver}"
+
+  export PERL_PATH="${JUMBO_ROOT}/bin/perl"
+  export PYTHON_PATH="${JUMBO_ROOT}/bin/python"
+
+  ./configure --prefix="${JUMBO_ROOT}" \
+    --libexecdir="${JUMBO_ROOT}/lib" \
+    --with-libpcre \
+    --with-gitconfig="${JUMBO_ROOT}/etc/gitconfig" \
+    --with-gitattributes="${JUMBO_ROOT}/etc/gitattributes"
+  make NO_CROSS_DIRECTORY_HARDLINKS=1
+  make NO_CROSS_DIRECTORY_HARDLINKS=1 NO_PERL=1 DESTDIR="${pkgdir}" install
+  (cd perl; perl Makefile.PL INSTALLDIRS=vendor; make; make DESTDIR="${pkgdir}" install)
+
+  # bash completion
+  mkdir -p "${pkgdir}/${JUMBO_ROOT}/share/bash-completion/completions/"
+  install -m644 ./contrib/completion/git-completion.bash "${pkgdir}/${JUMBO_ROOT}/share/bash-completion/completions/git"
+  # fancy git prompt
+  mkdir -p "${pkgdir}/${JUMBO_ROOT}/share/git/"
+  install -m644 ./contrib/completion/git-prompt.sh "${pkgdir}/${JUMBO_ROOT}/share/git/git-prompt.sh"
+  # more contrib stuff
+  cp -a ./contrib "${pkgdir}/${JUMBO_ROOT}/share/git/"
+
+  # how 'bout some manpages?
+  for mansect in man1 man5 man7; do
+    for manpage in "${srcdir}/${mansect}"/*; do
+      install -D -m644 "${manpage}" "${pkgdir}/${JUMBO_ROOT}/share/man/${mansect}/$(basename ${manpage})"
+    done
+  done
+
+  # remove perllocal.pod, .packlist, and empty directories.
+  rm -rf "${pkgdir}/${JUMBO_ROOT}/lib/perl5"
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

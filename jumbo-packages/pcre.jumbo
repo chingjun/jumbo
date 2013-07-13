@@ -1,0 +1,20 @@
+pkgname=pcre
+pkgver=8.32
+pkgrel=1
+pkgdesc="A library that implements Perl 5-style regular expressions"
+depends=() # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tar.bz2")
+md5sums=('62f02a76bb57a40bc66681760ed511d5')
+
+jumbo_install() {
+  cd "${srcdir}/${pkgname}-${pkgver}"
+
+  export CFLAGS="${CFLAGS} -fPIC"
+  ./configure --prefix="${JUMBO_ROOT}" \
+    --enable-pcre16 --enable-jit \
+    --enable-utf8 --enable-unicode-properties
+  make
+  make DESTDIR="${pkgdir}" install
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

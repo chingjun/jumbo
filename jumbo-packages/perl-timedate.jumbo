@@ -1,0 +1,19 @@
+pkgname=perl-timedate
+_realname=TimeDate
+pkgver=2.30
+pkgrel=1
+pkgdesc="Date formating subroutines"
+depends=("perl") # missdepends=()
+# optdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/TimeDate-2.30.tar.gz")
+md5sums=("b1d91153ac971347aee84292ed886c1c")
+
+jumbo_install() {
+  cd "${srcdir}"/${_realname}-${pkgver}
+  perl Makefile.PL INSTALLDIRS=vendor
+  
+  make
+  make install DESTDIR="${pkgdir}"
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

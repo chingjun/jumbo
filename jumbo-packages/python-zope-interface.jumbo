@@ -1,0 +1,15 @@
+pkgname=python-zope-interface
+pkgver=4.0.3
+pkgrel=1
+pkgdesc="Interfaces for Python"
+depends=("python") # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/zope.interface-${pkgver}.tar.gz")
+md5sums=("1ddd308f2c83703accd1696158c300eb")
+
+jumbo_install() {
+  cd "${srcdir}/zope.interface-${pkgver}"
+
+  python setup.py install --root="${pkgdir}" --optimize=1
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

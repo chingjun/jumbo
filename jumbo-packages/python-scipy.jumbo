@@ -1,0 +1,22 @@
+pkgname=python-scipy
+_realname=scipy
+pkgver=0.11.0
+pkgrel=1
+pkgdesc="Scientific tools for Python"
+depends=('python' 'python-numpy' 'gcc46') # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/${_realname}-${pkgver}.tar.gz")
+md5sums=('842c81d35fd63579c41a8ca21a2419b9')
+
+jumbo_install() {
+  cd "${srcdir}/${_realname}-${pkgver}"
+
+  # Changing the arithmetic parameter (Thanks to Fabrizio Castellano)
+  sed -i "s/\#define\ UNK\ 1/\#define\ IBMPC\ 1/" scipy/special/cephes/mconf.h
+
+  export LDFLAGS="${LDFLAGS} -shared"
+  export PATH="${JUMBO_ROOT}/opt/gcc46/bin:${PATH}"
+
+  python setup.py config_fc --fcompiler=gnu95 install --prefix="${JUMBO_ROOT}" --root="${pkgdir}" --optimize=1  
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

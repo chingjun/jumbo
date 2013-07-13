@@ -1,0 +1,24 @@
+pkgname=libxslt
+pkgver=1.1.26
+pkgrel=1
+pkgdesc="XML stylesheet transformation library"
+depends=('python' 'libxml2' 'libgcrypt') # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tar.gz"
+         "${JUMBO_REPO}/packages/${pkgname}/CVE-2011-1202.patch")
+md5sums=('e61d0364a30146aaa3001296f853b2b9'
+         'ce9744943575efaa6b5501668899b753')
+
+jumbo_install() {
+  cd "${srcdir}/${pkgname}-${pkgver}"
+
+  patch -Np1 -i "${srcdir}/CVE-2011-1202.patch"
+
+  sed -e "s|/usr/bin/python -u|${JUMBO_ROOT}/bin/python -u|g" -e "s|/usr/bin/python$|${JUMBO_ROOT}/bin/python|g" -i python/tests/*.py
+  ./configure --prefix="${JUMBO_ROOT}" --with-python="${JUMBO_ROOT}/bin/python"
+  make
+  make DESTDIR="${pkgdir}" install
+
+  rm -f "${pkgdir}/${JUMBO_ROOT}"/lib/python*/site-packages/*.a
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

@@ -1,0 +1,21 @@
+pkgname=p7zip
+pkgver=9.20.1
+pkgrel=2
+pkgdesc='Command-line version of the 7zip compressed file archiver'
+depends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}_${pkgver}_src_all.tar.bz2")
+md5sums=('bd6caaea567dc0d995c990c5cc883c89')
+
+jumbo_install() {
+  cd "${srcdir}/${pkgname}_${pkgver}"
+
+  cp makefile.linux_amd64 makefile.machine
+  make 7z 7za 7zr OPTFLAGS="${CXXFLAGS}"
+  make install \
+    DEST_DIR="${pkgdir}" \
+    DEST_HOME="${JUMBO_ROOT}" \
+    DEST_MAN="${JUMBO_ROOT}/share/man"
+  chmod -R u+w "${pkgdir}/${JUMBO_ROOT}"
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

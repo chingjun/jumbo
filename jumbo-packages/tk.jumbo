@@ -1,0 +1,40 @@
+pkgname=tk
+pkgver=8.6.0
+pkgrel=1
+pkgdesc="A windowing toolkit for use with tcl"
+depends=('tcl') # missdepends=('libxss' 'libxft')
+sources=("${JUMBO_REPO}/packages/${pkgname}/tk${pkgver}-src.tar.gz")
+md5sums=('b883a1a3c489c17413fb602a94bf54e8')
+
+jumbo_install() {
+  # For compile use
+  mkdir -p "${pkgdir}/${JUMBO_ROOT}/src"
+  cp -a -r "${srcdir}/tk${pkgver}" "${pkgdir}/${JUMBO_ROOT}/src/"
+
+  cd "${srcdir}/tk${pkgver}"
+
+  # Remove visibility optimization
+  for name in $(find . -name 'configure'); do
+    sed -i 's|#define MODULE_SCOPE extern __attribute__((__visibility__(\\\?"hidden\\\?")))|#define MODULE_SCOPE extern|' ${name}
+  done
+
+  cd "${srcdir}/tk${pkgver}/unix"
+
+  # Don't let tk find the previous version of hedaer files in jumbo
+  unset CPPFLAGS
+  unset CFLAGS
+  unset CXXFLAGS
+  unset LDFLAGS
+
+  ./configure --prefix="${JUMBO_ROOT}" \
+    --mandir="${JUMBO_ROOT}/share/man" \
+    --enable-threads --enable-64bit --enable-shared
+  make
+  make INSTALL_ROOT="${pkgdir}" install install-private-headers
+  ln -sf wish8.6 "${pkgdir}/${JUMBO_ROOT}/bin/wish"
+
+  # remove buildroot traces
+  sed -i "s#${srcdir}#${JUMBO_ROOT}/src#" "${pkgdir}/${JUMBO_ROOT}"/lib/tkConfig.sh
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

@@ -1,0 +1,16 @@
+pkgname=python-meld3
+_realname=meld3
+pkgver=0.6.10
+pkgrel=1
+pkgdesc="An HTML/XML templating engine"
+depends=('python')
+sources=("${JUMBO_REPO}/packages/${pkgname}/${_realname}-${pkgver}.tar.gz")
+md5sums=('42e58624e9d427be7659d7a28e2b0b6f')
+
+jumbo_install() {
+  cd "${srcdir}/${_realname}-${pkgver}"
+
+  python setup.py install --root="${pkgdir}" --optimize=1  
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

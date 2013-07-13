@@ -1,0 +1,17 @@
+pkgname=libgpg-error
+pkgver=1.10
+pkgrel=1
+pkgdesc="Support library for libgcrypt"
+depends=() # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tar.bz2")
+md5sums=('736a03daa9dc5873047d4eb4a9c22a16')
+
+jumbo_install() {
+  cd "${srcdir}/${pkgname}-${pkgver}"
+
+  ./configure --prefix="${JUMBO_ROOT}"
+  make
+  make DESTDIR="${pkgdir}/" install
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

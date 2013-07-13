@@ -1,0 +1,22 @@
+pkgname=perl-mozilla-ca
+_realname=Mozilla-CA
+pkgver=20120309
+pkgrel=1
+pkgdesc="Mozilla's CA cert bundle in PEM format"
+depends=('perl') # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/${_realname}-${pkgver}.tar.gz")
+md5sums=('f7fba6902335c5e068e3a576e4dce9ef')
+
+jumbo_install() {
+  cd "${srcdir}/${_realname}-${pkgver}"
+  perl Makefile.PL INSTALLDIRS=vendor
+  make DESTDIR="${pkgdir}" install
+
+  # remove perllocal.pod and .packlist
+  find "${pkgdir}" -name .packlist -exec rm {} \;
+  find "${pkgdir}" -name perllocal.pod -exec rm {} \;
+  # remove empty directories
+  find "${pkgdir}" -depth -type d -empty -exec rmdir {} \;
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

@@ -1,0 +1,16 @@
+pkgname=python-sh
+_realname=sh
+pkgver=1.08
+pkgrel=1
+pkgdesc="Full-fledged subprocess interface for Python that allows you to call any program as if it were a function"
+depends=('python') # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/${_realname}-${pkgver}.tar.gz")
+md5sums=('4028bcba85daa0aef579ed24261e88a3')
+
+jumbo_install() {
+  cd "${srcdir}/${_realname}-${pkgver}"
+
+  python setup.py install --root="${pkgdir}" --optimize=1
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

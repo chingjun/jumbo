@@ -1,0 +1,20 @@
+pkgname=python-docutils
+_realname=docutils
+pkgver=0.10
+pkgrel=1
+pkgdesc='Set of tools for processing plaintext docs into formats such as HTML, XML, or LaTeX'
+depends=('python')
+sources=("${JUMBO_REPO}/packages/${pkgname}/${_realname}-${pkgver}.tar.gz")
+md5sums=('d8d4660c08302c791b2d71a155a2f4bc')
+
+jumbo_install() {
+  cd "${srcdir}/${_realname}-${pkgver}"
+
+  python setup.py install --root="${pkgdir}" --optimize=1  
+  # symlink without .py
+  for _f in "${pkgdir}/${JUMBO_ROOT}"/bin/*.py; do
+      ln -s "$(basename $_f)" "${pkgdir}/${JUMBO_ROOT}"/bin/"$(basename $_f .py)"
+  done
+}
+
+# vim:set ts=2 sw=2 ft=sh et:

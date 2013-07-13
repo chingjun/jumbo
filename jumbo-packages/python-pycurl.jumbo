@@ -1,0 +1,18 @@
+pkgname=python-pycurl
+_pkgname=pycurl
+pkgver=7.19.0
+pkgrel=1
+pkgdesc="PycURL -- cURL library module for Python"
+depends=("python" "curl") # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/${_pkgname}-${pkgver}.tar.gz")
+md5sums=("919d58fe37e69fe87ce4534d8b6a1c7b")
+
+jumbo_install() {
+  
+  cd "${srcdir}/${_pkgname}-${pkgver}"
+  
+  python setup.py install --root="${pkgdir}" --optimize=1
+
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

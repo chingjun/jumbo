@@ -1,0 +1,18 @@
+pkgname=python-torndb
+_pkgname=torndb
+pkgver=0.1
+pkgrel=1
+pkgdesc="A lightweight wrapper around MySQLdb.  Originally part of the Tornado framework."
+depends=("python" "python-mysql") # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/${_pkgname}-${pkgver}.tar.gz")
+md5sums=("28c960531ff237f3f254cf2f508d29ba")
+
+jumbo_install() {
+
+  cd "${srcdir}/${_pkgname}-${pkgver}"
+
+  python setup.py install --root="${pkgdir}" --optimize=1
+
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

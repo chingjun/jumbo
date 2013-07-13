@@ -1,0 +1,22 @@
+pkgname=perl-encode-locale
+_realname=Encode-Locale
+pkgver=1.03
+pkgrel=1
+pkgdesc="Determine the locale encoding"
+depends=('perl') # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/${_realname}-${pkgver}.tar.gz")
+md5sums=('de8422d068634e7c1068dab4e18b452f')
+
+jumbo_install() {
+  cd "${srcdir}/${_realname}-${pkgver}"
+  perl Makefile.PL INSTALLDIRS=vendor
+  make DESTDIR="${pkgdir}" install
+
+  # remove perllocal.pod and .packlist
+  find "${pkgdir}" -name .packlist -exec rm {} \;
+  find "${pkgdir}" -name perllocal.pod -exec rm {} \;
+  # remove empty directories
+  find "${pkgdir}" -depth -type d -empty -exec rmdir {} \;
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

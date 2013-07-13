@@ -1,0 +1,34 @@
+pkgname=emacs
+pkgver=24.2
+pkgrel=1
+pkgdesc="The extensible, customizable, self-documenting real-time display editor"
+depends=() # missdepends=('librsvg' 'gpm' 'giflib' 'libxpm' 'gtk2' 'hicolor-icon-theme' 'gconf' 'desktop-file-utils' 'alsa-lib' 'imagemagick')
+sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tar.bz2")
+md5sums=('1676803a50e8adc817fdaaebb9234f14')
+
+jumbo_install() {
+  cd "${srcdir}/${pkgname}-${pkgver}"
+
+  ./configure --prefix="${JUMBO_ROOT}" \
+    --sysconfdir="${JUMBO_ROOT}/etc" \
+    --libexecdir="${JUMBO_ROOT}/lib" \
+    --localstatedir="${JUMBO_ROOT}/var"
+  make
+  make DESTDIR="${pkgdir}" install
+
+  # remove conflict with ctags package
+  mv "${pkgdir}/${JUMBO_ROOT}"/bin/{ctags,ctags.emacs}
+  mv "${pkgdir}/${JUMBO_ROOT}"/share/man/man1/{ctags.1.gz,ctags.emacs.1.gz}
+
+  # fix all the 777 perms on directories
+  find "${pkgdir}/${JUMBO_ROOT}"/share/emacs/$_majorver -type d -exec chmod 755 {} \;
+  # fix user/root permissions on usr/share files
+  #find "${pkgdir}"/${JUMBO_ROOT}/share/emacs/$_majorver -exec chown root:root {} \;
+  # fix perms on /var/games
+  chmod 775 "${pkgdir}/${JUMBO_ROOT}"/var/games
+  chmod 775 "${pkgdir}/${JUMBO_ROOT}"/var/games/emacs
+  chmod 664 "${pkgdir}/${JUMBO_ROOT}"/var/games/emacs/*
+  #chown -R root:games "$pkgdir"/var/games
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

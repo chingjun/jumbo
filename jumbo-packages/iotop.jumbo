@@ -1,0 +1,15 @@
+pkgname=iotop
+pkgver=0.5
+pkgrel=1
+pkgdesc='View I/O usage of processes'
+depends=('python')
+sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tar.bz2")
+md5sums=('b0846ad976f41bca2813f7f8a73fef31')
+
+jumbo_install() {
+  cd "${srcdir}/${pkgname}-${pkgver}"
+
+  python setup.py install --root="${pkgdir}" --optimize=1  
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

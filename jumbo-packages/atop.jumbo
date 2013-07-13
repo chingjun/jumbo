@@ -1,0 +1,23 @@
+pkgname=atop
+pkgver=2.0_1
+pkgrel=1
+pkgdesc="A system and process level monitor"
+depends=('ncurses' 'zlib') # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver/_/-}.tar.gz")
+md5sums=('6867ea2211edaf8140b94130470d646b')
+
+jumbo_install() {
+  cd "${srcdir}/${pkgname}-${pkgver/_/-}"
+
+  sed -i 's#root ##' atop.cron
+  sed -i 's#/usr##g' Makefile
+  sed -i 's/chown/#chown/g' Makefile
+  sed -i -e "/LOGPATH=/s#=/#=${JUMBO_ROOT}/#" \
+         -e "/BINPATH=/s#=/usr/#=${JUMBO_ROOT}/#" \
+         -e "/PIDFILE=/s#=/#=${JUMBO_ROOT}/#" atop.daily
+
+  make
+  make DESTDIR="${pkgdir}/${JUMBO_ROOT}" INIPATH="etc/rc.d" install
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

@@ -1,0 +1,15 @@
+pkgname=python-virtualenv
+pkgver=1.8.4
+pkgrel=1
+pkgdesc="Virtual Python Environment builder"
+depends=('python' 'python-distribute') # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/virtualenv-${pkgver}.tar.gz")
+md5sums=('1c7e56a7f895b2e71558f96e365ee7a7')
+
+jumbo_install() {
+  cd "${srcdir}/virtualenv-${pkgver}"
+
+  python setup.py install --root="${pkgdir}" --optimize=1
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

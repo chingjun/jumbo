@@ -1,0 +1,40 @@
+pkgname=readline
+pkgver=6.2.004
+pkgrel=1
+pkgdesc="GNU readline library"
+depends=('ncurses')
+sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-6.2.tar.gz"
+         "${JUMBO_REPO}/packages/${pkgname}/inputrc"
+         "${JUMBO_REPO}/packages/${pkgname}/${pkgname}62-001"
+         "${JUMBO_REPO}/packages/${pkgname}/${pkgname}62-002"
+         "${JUMBO_REPO}/packages/${pkgname}/${pkgname}62-003"
+         "${JUMBO_REPO}/packages/${pkgname}/${pkgname}62-004")
+md5sums=('67948acb2ca081f23359d0256e9a271c'
+         '58d54966c1191db45973cb3191ac621a'
+         '83287d52a482f790dfb30ec0a8746669'
+         '0665020ea118e8434bd145fb71f452cc'
+         'c9d5d79718856e711667dede87cb7622'
+         'c08e787f50579ce301075c523fa660a4')
+
+jumbo_install() {
+  cd "${srcdir}/${pkgname}-6.2"
+  
+  patch -Np0 -i ${srcdir}/${pkgname}62-001
+  patch -Np0 -i ${srcdir}/${pkgname}62-002
+  patch -Np0 -i ${srcdir}/${pkgname}62-003
+  patch -Np0 -i ${srcdir}/${pkgname}62-004
+
+  ## Remove RPATH from shared objects (FS#14366)
+  #sed -i 's|-Wl,-rpath,$(libdir) ||g' support/shobj-conf
+
+  # build with -fPIC for x86_64 (FS#15634)
+  export CFLAGS="${CFLAGS} -fPIC"
+
+  ./configure --prefix="${JUMBO_ROOT}" --libdir="${JUMBO_ROOT}/lib"
+  make SHLIB_LIBS=-lncurses
+  make DESTDIR="${pkgdir}" install
+  
+  install -Dm644 "${srcdir}/inputrc" "${pkgdir}/${JUMBO_ROOT}/etc/inputrc"
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

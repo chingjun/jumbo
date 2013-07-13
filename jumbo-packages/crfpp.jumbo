@@ -1,0 +1,17 @@
+pkgname=crfpp
+pkgver=0.57
+pkgrel=1
+pkgdesc="A Conditional Random Field implementation"
+depends=() # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/CRF++-${pkgver}.tar.gz")
+md5sums=('efec88b501fecb0a72dd94caffb56294')
+
+jumbo_install() {
+  cd "${srcdir}/CRF++-${pkgver}"
+
+  ./configure --prefix="${JUMBO_ROOT}"
+  make
+  make DESTDIR="${pkgdir}" install
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

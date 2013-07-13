@@ -1,0 +1,17 @@
+pkgname=python-nose
+_realname=nose
+pkgver=1.2.1
+pkgrel=1
+pkgdesc="A discovery-based unittest extension"
+depends=('python' 'python-distribute') # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/${_realname}-${pkgver}.tar.gz")
+md5sums=("735e3f1ce8b07e70ee1b742a8a53585a")
+
+jumbo_install() {
+  cd "${srcdir}/${_realname}-${pkgver}"
+
+  sed -i -e "s:man/man1:share/man/man1:g" setup.py
+  python setup.py install --prefix="${JUMBO_ROOT}" --root="${pkgdir}" --optimize=1
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

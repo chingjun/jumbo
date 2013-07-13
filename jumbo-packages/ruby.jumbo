@@ -1,0 +1,23 @@
+pkgname=ruby
+pkgver=1.9.3_p385
+pkgrel=1
+pkgdesc='An object-oriented language for quick and easy programming'
+depends=('libffi' 'libyaml' 'pkg-config' 'openssl') # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver//_/-}.tar.bz2")
+md5sums=('5ec9aff670f4912b0f6f0e11e855ef6c')
+
+jumbo_install() {
+  cd "${srcdir}/${pkgname}-${pkgver//_/-}"
+
+  PKG_CONFIG=${JUMBO_ROOT}/bin/pkg-config \
+    ./configure \
+    --prefix="${JUMBO_ROOT}" \
+    --sysconfdir="${JUMBO_ROOT}/etc" \
+    --enable-shared \
+    --enable-pthread \
+    --disable-install-doc
+  make
+  make DESTDIR="${pkgdir}" install-nodoc
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

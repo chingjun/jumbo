@@ -1,0 +1,17 @@
+pkgname=sshfs
+pkgver=2.4
+pkgrel=1
+pkgdesc="FUSE client based on the SSH File Transfer Protocol"
+depends=("libfuse" "glib") # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/sshfs-fuse-${pkgver}.tar.gz")
+md5sums=("3c7c3647c52ce84d09486f1da3a3ce24")
+
+jumbo_install() {
+  cd "${srcdir}/sshfs-fuse-${pkgver}"
+
+  ./configure --prefix="${JUMBO_ROOT}"
+  make
+  make DESTDIR="${pkgdir}" install
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

@@ -1,0 +1,17 @@
+pkgname=expect
+pkgver=5.45
+pkgrel=2
+pkgdesc="A tool for automating interactive applications"
+depends=('tcl') # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}${pkgver}.tar.gz")
+md5sums=('44e1a4f4c877e9ddc5a542dfa7ecc92b')
+
+jumbo_install() {
+  cd "${srcdir}/${pkgname}${pkgver}"
+
+  ./configure --prefix="${JUMBO_ROOT}" --mandir="${JUMBO_ROOT}/share/man"
+  make
+  make DESTDIR="${pkgdir}" install
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

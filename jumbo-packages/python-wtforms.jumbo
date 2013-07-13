@@ -1,0 +1,18 @@
+pkgname=python-wtforms
+_realname=WTForms
+pkgver=1.0.3
+pkgrel=1
+pkgdesc="A flexible forms validation and rendering library for python web development."
+depends=('python' 'python-distribute' 'unzip') # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/${_realname}-${pkgver}.zip")
+md5sums=('3a35f12a495dad15b427447555d4bd6e')
+
+jumbo_install() {
+  cd "${srcdir}"
+  unzip "${_realname}-${pkgver}.zip"
+  cd "${srcdir}/${_realname}-${pkgver}"
+
+  python setup.py install --prefix="${JUMBO_ROOT}" --root="${pkgdir}" --optimize=1  
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

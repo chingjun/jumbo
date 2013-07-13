@@ -1,0 +1,27 @@
+pkgname=tmux
+pkgver=1.8
+pkgrel=1
+pkgdesc="A terminal multiplexer"
+depends=('ncurses' 'libevent')
+sources=("${JUMBO_REPO}/packages/${pkgname}/tmux-1.8.tar.gz")
+md5sums=("b9477de2fe660244cbc6e6d7e668ea0e")
+
+jumbo_install() {
+  cd "${srcdir}/$pkgname-$pkgver"
+
+  # tmux cannot find libevent header file if the directives is only in CPPFLAGS
+  export CFLAGS="$CFLAGS $CPPFLAGS"
+
+  sed -i "/SYSTEM_CFG/ s#/etc#${JUMBO_ROOT}/etc#" tmux.h
+	./configure --prefix="${JUMBO_ROOT}"
+  make
+	make DESTDIR="${pkgdir}" install
+
+	install -dm755 "${pkgdir}/${JUMBO_ROOT}/share/tmux/"
+	install -m644 examples/* "${pkgdir}/${JUMBO_ROOT}/share/tmux/"
+	install -Dm644 examples/tmux.vim "${pkgdir}/${JUMBO_ROOT}/share/vim/vimfiles/syntax/tmux.vim"
+	install -d "${pkgdir}/${JUMBO_ROOT}/share/bash-completion/completions/"
+	mv "${pkgdir}/${JUMBO_ROOT}/share/tmux/bash_completion_tmux.sh" "${pkgdir}/${JUMBO_ROOT}/share/bash-completion/completions/tmux"
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

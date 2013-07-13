@@ -1,0 +1,20 @@
+pkgname=moreutils
+pkgver=0.48
+pkgrel=1
+pkgdesc="A growing collection of the unix tools that nobody thought to write thirty years ago"
+depends=("perl" "perl-ipc-run" "perl-timedate" "perl-time-duration") # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/moreutils_0.48.tar.gz")
+md5sums=("c6f1eb13132a88ce053be709aa2625d2")
+
+jumbo_install() {
+  cd "${srcdir}"/$pkgname
+  
+  sed -i -e "/install.\+MANS/d" Makefile
+  
+  make DOCBOOK2XMAN=true MANS=
+  make PREFIX="${pkgdir}/${JUMBO_ROOT}" MANS= install
+  
+  mv "${pkgdir}/${JUMBO_ROOT}"/bin/parallel "${pkgdir}/${JUMBO_ROOT}"/bin/parallel-moreutils
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

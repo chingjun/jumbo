@@ -1,0 +1,17 @@
+pkgname=xz
+pkgver=5.0.4
+pkgrel=1
+pkgdesc='Library and command line tools for XZ and LZMA compressed files'
+depends=() # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tar.gz")
+md5sums=('df3df690aef18384e1e031be7ec3a964')
+
+jumbo_install() {
+  cd "${srcdir}/${pkgname}-${pkgver}"
+
+  ./configure --prefix="${JUMBO_ROOT}"
+  make
+  make DESTDIR="${pkgdir}" install
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

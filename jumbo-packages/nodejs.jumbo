@@ -1,0 +1,22 @@
+pkgname=nodejs
+pkgver=0.8.20
+pkgrel=1
+pkgdesc='Evented I/O for V8 javascript'
+depends=('gcc46' 'make' 'python' 'zlib' 'openssl') # missdepends=('v8')
+sources=("${JUMBO_REPO}/packages/${pkgname}/node-v${pkgver}.tar.gz")
+md5sums=('dd8a977b8f38d6ccba25540fa8a8ffce')
+
+jumbo_install() {
+  cd "${srcdir}/node-v${pkgver}"
+
+  export PATH="${JUMBO_ROOT}/opt/gcc46/bin:${PATH}"
+
+  # disable flock
+  export LINK=g++
+
+  ./configure --prefix="${JUMBO_ROOT}" --shared-openssl --shared-zlib
+  make
+  make DESTDIR="${pkgdir}" install
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

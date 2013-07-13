@@ -1,0 +1,36 @@
+pkgname=colorgcc
+pkgver=1.3.2
+pkgrel=1
+pkgdesc="A Perl wrapper to colorize the output of compilers with warning/error messages matching the gcc output format"
+depends=() # missdepends=('perl')
+sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tar.gz"
+         "${JUMBO_REPO}/packages/${pkgname}/${pkgname}_1.3.2.0-10.diff")
+md5sums=('7d62f92ab99c8271c79c40a0a470e8f7'
+         '2811b14a96a1b4df72edab4c1b46ecdd')
+
+jumbo_install() {
+  cd "${srcdir}/${pkgname}-${pkgver}"
+
+  patch -p1 < "${srcdir}/colorgcc_1.3.2.0-10.diff"
+  patch -p1 < debian/patches/005_old_changes.patch
+  patch -p1 < debian/patches/01_split_non_quoted.patch
+  patch -p1 < debian/patches/02_stderr.patch
+  patch -p1 < debian/patches/03_color_warnings.patch
+  patch -p1 < debian/patches/04_g++_color.patch
+  patch -p1 < debian/patches/05_console-colors.patch
+  patch -p1 < debian/patches/06_use_distcc.patch
+  patch -p1 < debian/patches/07_invalid_attr.patch
+  patch -p1 < debian/patches/08_force_color_opt.patch
+  patch -p1 < debian/patches/09_color_warnings.patch
+  patch -p1 < debian/patches/10_utf8_output.patch
+
+  install -D -m755 colorgcc "${pkgdir}/${JUMBO_ROOT}/bin/colorgcc"
+  install -D -m644 colorgccrc "${pkgdir}/${JUMBO_ROOT}/etc/colorgcc/colorgccrc"
+
+  sed -i -e "s|/etc/colorgcc/colorgccrc|${JUMBO_ROOT}/etc/colorgcc/colorgccrc|" "${pkgdir}/${JUMBO_ROOT}/bin/colorgcc"
+  for i in cc c++ gcc g++ ; do
+    ln -s "${JUMBO_ROOT}/bin/colorgcc" "${pkgdir}/${JUMBO_ROOT}/bin/${i}"
+  done
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

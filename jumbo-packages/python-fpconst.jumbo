@@ -1,0 +1,14 @@
+pkgname=python-fpconst
+pkgver=0.7.3
+pkgrel=1
+pkgdesc="Utilities for handling IEEE 754 floating point special values"
+depends=('python')
+sources=("${JUMBO_REPO}/packages/${pkgname}/fpconst-${pkgver}.tar.gz")
+md5sums=('13884b81da3335b2ec4b6ea1dc26b6fa')
+
+jumbo_install() {
+  cd "${srcdir}/fpconst-${pkgver}"
+  python setup.py install --root="${pkgdir}" --optimize=1
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

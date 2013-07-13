@@ -1,0 +1,18 @@
+pkgname=liblzo2
+pkgver=2.06
+pkgrel=1
+pkgdesc="An extremely fast compression and decompression library"
+depends=() # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/lzo-${pkgver}.tar.gz")
+md5sums=('95380bd4081f85ef08c5209f4107e9f8')
+
+jumbo_install() {
+  cd "${srcdir}/lzo-${pkgver}"
+
+  ./configure --enable-shared \
+              --prefix="${JUMBO_ROOT}"
+  make
+  make DESTDIR="${pkgdir}" install
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

@@ -1,0 +1,20 @@
+pkgname=google-glog
+pkgver=0.3.3
+pkgrel=1
+pkgdesc="Logging library for C++"
+depends=() # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/glog-${pkgver}.tar.gz")
+md5sums=('a6fd2c22f8996846e34c763422717c18')
+
+jumbo_install() {
+  cd "${srcdir}/glog-${pkgver}"
+
+  ./configure --prefix="${JUMBO_ROOT}"
+  make
+  make DESTDIR="${pkgdir}" install
+
+  # Lazy way of dealing with conflicting man and info pages...
+  rm -rf "${pkgdir}/${JUMBO_ROOT}/share"
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

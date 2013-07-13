@@ -1,0 +1,17 @@
+pkgname=libevent
+pkgver=2.0.21
+pkgrel=1
+pkgdesc="An event notification library"
+depends=('openssl') # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}-stable.tar.gz")
+md5sums=('b2405cc9ebf264aa47ff615d9de527a2')
+
+jumbo_install() {
+  cd "${srcdir}/${pkgname}-${pkgver}-stable"
+
+  ./configure --prefix="${JUMBO_ROOT}" --sysconfdir="${JUMBO_ROOT}/etc"
+  make
+  make DESTDIR="${pkgdir}" install
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

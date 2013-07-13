@@ -1,0 +1,212 @@
+#!/bin/bash
+set -e
+trap "echo Fail unexpectedly on line \$LINENO!" ERR
+
+if [[ -z "$CONTROLLER" ]]
+then
+    export OPT_DL=0
+    export OPT_CONV=0
+    export CONTROLLER=1
+    set -- $(getopt dc "$@")
+    while [ $# -gt 0 ]
+    do
+        case "$1" in
+            (-d) OPT_DL=1;;
+            (-c) OPT_CONV=1;;
+            (--) shift; break;;
+            (-*) _fatal "Unrecognized option $1";;
+            (*)  break;;
+        esac
+        shift
+    done
+
+    if [[ "$OPT_DL" == 0 && "$OPT_CONV" == 0 ]]
+    then
+        OPT_DL=1
+        OPT_CONV=1
+    fi
+fi
+
+if [ -z "$1" ]
+then
+    echo "Usage : $0 [-d] [-c] pkgname [pkgname ...]" >&2
+    exit 1
+fi
+
+if [ -n "$2" ]
+then
+    for i in "$@"
+    do
+        $0 "$i"
+    done
+    exit
+fi
+
+_fatal() {
+    echo "$@" >&2
+    exit 1
+}
+
+_dl() {
+    [ -n "$1" ] || return 1
+    [ -n "$2" ] || return 1
+    failed=0
+    for i in packages community
+    do
+        failed=0
+        curl -L -f  -# "https://projects.archlinux.org/svntogit/$i.git/plain/trunk/$2?h=packages/$1" && break || true
+        failed=1
+    done
+    [[ "$failed" == 0 ]] || _fatal "Download failed"
+}
+_get_pkgbuild() {
+    [ -n "$1" ] || return 1
+    _dl "$1" PKGBUILD
+}
+
+_pkg_dl() {
+    mkdir -p "$1/"
+    echo "Downloading PKGBUILD..."
+    _get_pkgbuild "$1" > "$1/PKGBUILD"
+
+    . "$1/PKGBUILD"
+
+    local sources_num=${#source[@]}
+    for ((k=0; k<sources_num; k++))
+    do
+        local i=${source[$k]}
+        echo "Downloading $i..."
+        local scheme=${i%%://*}
+        local filename=$(basename "$i")
+        case  "X$scheme" in 
+            Xhttp | Xhttps | Xftp)
+                local failed=0
+                for attempts in 0 1 2 3 4
+                do
+                    failed=0
+                    curl -L -f -# "$i" > "$1/$filename" && break || true
+                    failed=1
+                done
+                [[ "$failed" == 0 ]] || _fatal "Download failed"
+                ;;
+            *)
+                _dl "$1" "$i" > "$1/$filename" || _fatal "Download failed"
+        esac
+        if [ -n "${md5sums[$k]}" ]
+        then
+            [[ "$(md5sum "$1/$filename" | awk '{print $1}')" == "${md5sums[$k]}" ]] || _fatal "checksum error for file $filename"
+        elif [ -n "${sha1sums[$k]}" ]
+        then
+            [[ "$(sha1sum "$1/$filename" | awk '{print $1}')" == "${sha1sums[$k]}" ]] || _fatal "checksum error for file $filename"
+        elif [ -n "${sha256sums[$k]}" ]
+        then
+            [[ "$(shasum -a 256 "$1/$filename" | awk '{print $1}')" == "${sha256sums[$k]}" ]] || _fatal "checksum error for file $filename"
+        elif [ -n "${sha384sums[$k]}" ]
+        then
+            [[ "$(shasum -a 384 "$1/$filename" | awk '{print $1}')" == "${sha384sums[$k]}" ]] || _fatal "checksum error for file $filename"
+        elif [ -n "${sha512sums[$k]}" ]
+        then
+            [[ "$(shasum -a 512 "$1/$filename" | awk '{print $1}')" == "${sha512sums[$k]}" ]] || _fatal "checksum error for file $filename"
+        fi
+    done
+}
+
+_pkgbuild2jam() {
+    local vimline="# vi""m:set ft=sh ts=2 sw=2 et:"
+    local f="$1/PKGBUILD"
+
+    local pkgname=$(. "$f" ; echo "$pkgname")
+    local pkgver=$(. "$f" ; echo "$pkgver")
+    local pkgrel=$(. "$f" ; echo "$pkgrel")
+    local pkgdesc="$(. "$f" ; echo "$pkgdesc")"
+    local depends="$(. "$f" ; for i in "${depends[@]}"; do echo ${i%%>*}; done)"
+    local optdepends="$(. "$f" ; for i in "${optdepends[@]}"; do echo ${i%%:*}; done)"
+    local sources="$(. "$f" ; for i in "${source[@]}"; do echo $(basename "$i"); done)"
+
+    local build=$(cat $f | awk '
+        /^build/ { start=1; cur=1 }
+        / /{
+            if (start == 1 && $1 != "{" && $1 != "}" && $1 != "(" && $1 != ")" && cur != 1)
+                print $0;
+            cur = 0;
+           }
+        /^}/ {start=2}
+        /^\)/{start=2}
+        ')
+    local package=$(cat $f | awk '
+        /^package/ { start=1; cur=1 }
+        / /{
+            if (start == 1 && $1 != "{" && $1 != "}" && $1 != "(" && $1 != ")" && cur != 1)
+                print $0;
+            cur = 0;
+           }
+        /^}/ {start=2}
+        /^\)/{start=2}
+        ')
+
+    build=$(echo "$build" | sed -e 's/\$srcdir/${srcdir}/g' -e 's/\$pkgdir/${pkgdir}/g' -e 's|/usr|${JUMBO_ROOT}|g')
+    package=$(echo "$package" | sed -e 's/\$srcdir/${srcdir}/g' -e 's/\$pkgdir/${pkgdir}/g' -e 's|/usr|${JUMBO_ROOT}|g')
+
+    #preprocess here
+    local mydepend=''
+    for i in $depends
+    do
+        mydepend="$mydepend '$i'"
+    done
+    mydepend=${mydepend# }
+
+    local myoptdepend=''
+    for i in $optdepends
+    do
+        myoptdepend="$myoptdepend '$i'"
+    done
+    myoptdepend=${myoptdepend# }
+
+    #sources
+    local mysources=''
+    local mymd5sums=''
+    for i in $sources
+    do
+        local name=$i
+        local md5=$(md5sum "$1/$name" 2>/dev/null| awk '{print $1}')
+        mysources="$mysources
+         \"\${JUMBO_REPO}/packages/\${pkgname}/$name\""
+        mymd5sums="$mymd5sums
+         \"$md5\""
+    done
+    mysources="${mysources#"${mysources%%[![:space:]]*}"}"
+    mymd5sums="${mymd5sums#"${mymd5sums%%[![:space:]]*}"}"
+
+
+    cat > "$1/$pkgname.jumbo" <<EOF
+pkgname=$pkgname
+pkgver=$pkgver
+pkgrel=$pkgrel
+pkgdesc="$pkgdesc"
+depends=($mydepend) # missdepends=()
+# optdepends=($myoptdepend)
+sources=($mysources)
+md5sums=($mymd5sums)
+
+jumbo_install() {
+  #### build
+  $build
+
+  #### package
+  $package
+}
+
+$vimline
+EOF
+}
+
+if [[ "$OPT_DL" == 1 ]]
+then
+    _pkg_dl "$1"
+fi
+if [[ "$OPT_CONV" == 1 ]]
+then
+    _pkgbuild2jam "$1"
+fi
+
+# vim:set ft=sh ts=4 sw=4 et:

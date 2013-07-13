@@ -1,0 +1,23 @@
+pkgname=perl-lwp-protocol-https
+_realname=LWP-Protocol-https
+pkgver=6.03
+pkgrel=1
+pkgdesc="Provide https support for LWP::UserAgent"
+depends=('perl' 'perl-io-socket-ssl' 'perl-mozilla-ca'
+         'perl-net-http' 'perl-libwww') # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/${_realname}-${pkgver}.tar.gz")
+md5sums=('2a9341732172da290fe1b5af98a015a7')
+
+jumbo_install() {
+  cd "${srcdir}/${_realname}-${pkgver}"
+  perl Makefile.PL INSTALLDIRS=vendor
+  make DESTDIR="${pkgdir}" install
+
+  # remove perllocal.pod and .packlist
+  find "${pkgdir}" -name .packlist -exec rm {} \;
+  find "${pkgdir}" -name perllocal.pod -exec rm {} \;
+  # remove empty directories
+  find "${pkgdir}" -depth -type d -empty -exec rmdir {} \;
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

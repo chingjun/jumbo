@@ -1,0 +1,17 @@
+pkgname=mecab
+pkgver=0.996
+pkgrel=1
+pkgdesc="Yet Another Part-of-Speech and Morphological Analyzer"
+depends=() # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tar.gz")
+md5sums=('7603f8975cea2496d88ed62545ba973f')
+
+jumbo_install() {
+  cd "${srcdir}/${pkgname}-${pkgver}"
+
+  ./configure --prefix="${JUMBO_ROOT}" --enable-utf8-only
+  make
+  make DESTDIR="${pkgdir}" install
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

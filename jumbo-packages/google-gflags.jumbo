@@ -1,0 +1,21 @@
+pkgname=google-gflags
+pkgver=2.0
+pkgrel=1
+pkgdesc="Commandline flags module for C++"
+depends=() # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/gflags-${pkgver}.tar.gz")
+md5sums=('e02268c1e90876c809ec0ffa095da864')
+
+jumbo_install() {
+  cd "${srcdir}/gflags-${pkgver}"
+
+  ./configure --prefix="${JUMBO_ROOT}" || return 1
+  make || return 1
+  make DESTDIR="${pkgdir}" install || return 1
+
+  # Lazy way of dealing with conflicting man and info pages...
+  rm -rf "${pkgdir}/${JUMBO_ROOT}/share"
+}
+
+
+# vim:set ft=sh ts=2 sw=2 et:

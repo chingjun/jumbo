@@ -1,0 +1,17 @@
+pkgname=ab
+pkgver=1.0.0
+pkgrel=1
+pkgdesc="Apache Benchmark"
+depends=('apr' 'apr-util') # missdepends=('openssl')
+sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tar.gz")
+md5sums=('c5f28c415cd6447a9d8fd2c21da1b034')
+
+jumbo_install() {
+  cd "${srcdir}/${pkgname}-${pkgver}"
+
+  make
+  mkdir -p "${pkgdir}/${JUMBO_ROOT}/bin"
+  install ab "${pkgdir}/${JUMBO_ROOT}/bin/ab"
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

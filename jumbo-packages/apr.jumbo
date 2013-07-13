@@ -1,0 +1,22 @@
+pkgname=apr
+pkgver=1.4.6
+pkgrel=1
+pkgdesc="The Apache Portable Runtime"
+depends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tar.bz2")
+md5sums=('ffee70a111fd07372982b0550bbb14b7')
+
+jumbo_install() {
+  cd "${srcdir}/${pkgname}-${pkgver}"
+
+  export apr_cv_accept4=no
+  ./configure --prefix="${JUMBO_ROOT}" \
+    --includedir="${JUMBO_ROOT}/include/apr-1" \
+    --with-installbuilddir="${JUMBO_ROOT}/share/apr-1/build" \
+    --enable-nonportable-atomics \
+    --with-devrandom=/dev/urandom
+  make
+  make DESTDIR="${pkgdir}" install
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

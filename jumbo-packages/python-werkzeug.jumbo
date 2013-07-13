@@ -1,0 +1,16 @@
+pkgname=python-werkzeug
+_realname=Werkzeug
+pkgver=0.8.3
+pkgrel=1
+pkgdesc="The Swiss Army knife of Python web development"
+depends=('python') # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/${_realname}-${pkgver}.tar.gz")
+md5sums=("12aa03e302ce49da98703938f257347a")
+
+jumbo_install() {
+  cd "${srcdir}/${_realname}-${pkgver}"
+
+  python setup.py install --prefix="${JUMBO_ROOT}" --root="${pkgdir}" --optimize=1  
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

@@ -1,0 +1,123 @@
+pkgname=gcc46
+pkgver=4.6.3
+pkgrel=4
+pkgdesc="The GNU Compiler Collection (4.6.x)"
+depends=('gmp' 'mpfr' 'libmpc' 'binutils') # missdepends=('isl' 'cloog' 'glibc' 'ppl' 'elfutils' 'flex' 'bison')
+sources=("${JUMBO_REPO}/packages/${pkgname}/gcc-core.tar.bz2"
+         "${JUMBO_REPO}/packages/${pkgname}/gcc-g++.tar.bz2"
+         "${JUMBO_REPO}/packages/${pkgname}/gcc-fortran.tar.bz2")
+md5sums=('766091220c6a14fcaa2c06dd573e3758'
+         '37515158a0fb3d0800ec41a08c05e69e'
+         '26a18d5727f7c8c18581ba924cce1e5f')
+
+_basedir="${srcdir}/gcc-${pkgver}"
+
+jumbo_install() {
+  cd ${_basedir}
+
+  # Do not install libiberty
+  sed -i 's/install_to_$(INSTALL_DEST) //' libiberty/Makefile.in
+
+  ## Do not run fixincludes
+  #sed -i 's@\./fixinc\.sh@-c true@' gcc/Makefile.in
+
+  #patch -Np0 -i "${srcdir}/gcc-hash-style-both.patch"
+
+  echo ${pkgver} > gcc/BASE-VER
+
+  cd "${srcdir}"
+  mkdir gcc-build && cd gcc-build
+
+  ${_basedir}/configure --prefix="${JUMBO_ROOT}/opt/gcc46" \
+      --infodir="${JUMBO_ROOT}/opt/gcc46/share/info" \
+      --libdir="${JUMBO_ROOT}/opt/gcc46/lib" \
+      --libexecdir="${JUMBO_ROOT}/opt/gcc46/lib" \
+      --mandir="${JUMBO_ROOT}/opt/gcc46/share/man" \
+      --disable-libssp \
+      --disable-libstdcxx-pch \
+      --disable-libunwind-exceptions \
+      --disable-multilib \
+      --disable-werror \
+      --enable-__cxa_atexit \
+      --enable-checking=release \
+      --enable-clocale=gnu \
+      --enable-languages=c,c++,fortran \
+      --enable-libstdcxx-time \
+      --enable-gold \
+      --enable-ld=default \
+      --enable-linker-build-id \
+      --enable-lto \
+      --enable-plugin \
+      --with-plugin-ld=ld.gold \
+      --enable-shared \
+      --enable-threads=posix \
+      --with-gmp="${JUMBO_ROOT}" \
+      --with-mpc="${JUMBO_ROOT}" \
+      --with-mpfr="${JUMBO_ROOT}" \
+      --with-gnu-as \
+      --with-as="${JUMBO_ROOT}/opt/binutils/bin/as" \
+      --with-gnu-ld \
+      --with-ld="${JUMBO_ROOT}/opt/binutils/bin/ld" \
+      --with-build-time-tools="${JUMBO_ROOT}/opt/binutils/bin" \
+      --with-boot-ldflags="-Wl,-rpath=${JUMBO_ROOT}/lib -L${JUMBO_ROOT}/lib" \
+      --with-stage1-ldflags="-Wl,-rpath=${JUMBO_ROOT}/lib -L${JUMBO_ROOT}/lib" \
+      --with-cloog=no \
+      --with-ppl=no \
+      --with-system-zlib
+  make
+  make -j1 DESTDIR="${pkgdir}" install
+
+  # many packages expect this symlinks
+  ln -s gcc "${pkgdir}/${JUMBO_ROOT}/opt/gcc46/bin/cc"
+  ln -s gfortran "${pkgdir}/${JUMBO_ROOT}/opt/gcc46/bin/f95"
+
+  # POSIX conformance launcher scripts for c89 and c99
+  cat > "${pkgdir}/${JUMBO_ROOT}/opt/gcc46/bin/c89" <<"EOF"
+#!/bin/sh
+fl="-std=c89"
+for opt; do
+  case "$opt" in
+    -ansi|-std=c89|-std=iso9899:1990) fl="";;
+    -std=*) echo "`basename $0` called with non ANSI/ISO C option $opt" >&2
+      exit 1;;
+  esac
+done
+exec gcc $fl ${1+"$@"}
+EOF
+
+  cat > "${pkgdir}/${JUMBO_ROOT}/opt/gcc46/bin/c99" <<"EOF"
+#!/bin/sh
+fl="-std=c99"
+for opt; do
+  case "$opt" in
+    -std=c99|-std=iso9899:1999) fl="";;
+    -std=*) echo "`basename $0` called with non ISO C99 option $opt" >&2
+      exit 1;;
+  esac
+done
+exec gcc $fl ${1+"$@"}
+EOF
+
+  chmod 755 ${pkgdir}/${JUMBO_ROOT}/opt/gcc46/bin/c{8,9}9
+
+  ## Lazy way of dealing with conflicting man and info pages and locales...
+  #rm -rf ${pkgdir}/usr/share/
+
+  # FIXME: Get specs file path dynamically
+  SPECS_FILE="/opt/gcc46/lib/gcc/x86_64-unknown-linux-gnu/${pkgver}/specs"
+  "${pkgdir}/${JUMBO_ROOT}/opt/gcc46/bin/gcc" -dumpspecs \
+      | sed 's#%D#-L %:getenv(JUMBO_ROOT /opt/gcc46/lib64) -rpath %:getenv(JUMBO_ROOT /opt/gcc46/lib64) %D#' \
+      > "${pkgdir}/${JUMBO_ROOT}/${SPECS_FILE}"
+}
+
+jumbo_post_install() {
+cat <<"EOF"
+    >>
+    >> The gcc46 will be installed to ${JUMBO_ROOT}/opt/gcc46.
+    >> Run the following command if you want to use gcc46:
+    >>     export PATH="${JUMBO_ROOT}/opt/gcc46/bin:$PATH"
+    >>
+EOF
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

@@ -1,0 +1,16 @@
+pkgname=gnu-netcat
+pkgver=0.7.1
+pkgrel=1
+pkgdesc="GNU rewrite of netcat, the network piping application"
+depends=() # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/netcat-${pkgver}.tar.bz2")
+md5sums=('0a29eff1736ddb5effd0b1ec1f6fe0ef')
+
+jumbo_install() {
+  cd "${srcdir}/netcat-${pkgver}"
+  ./configure --prefix="${JUMBO_ROOT}" --mandir="${JUMBO_ROOT}/share/man"
+  make
+  make DESTDIR="${pkgdir}" install
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

@@ -1,0 +1,26 @@
+pkgname=redis
+pkgver=2.6.10
+pkgrel=1
+pkgdesc="Advanced key-value store"
+depends=("supervisor")
+backups=("etc/redis.conf")
+sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tar.gz"
+         "${JUMBO_REPO}/packages/${pkgname}/redis.ini")
+md5sums=('711b472b14084863699987786a378d87'
+         'b43b1ef36588c9a7311a83750efa0311')
+
+jumbo_install() {
+    cd "${srcdir}/${pkgname}-${pkgver}"
+
+    make MALLOC=libc
+    mkdir -p "${pkgdir}/${JUMBO_ROOT}/bin"
+    make INSTALL_BIN="${pkgdir}/${JUMBO_ROOT}/bin" PREFIX="${JUMBO_ROOT}" install
+
+    sed -i 's|pidfile /var/run/redis.pid|pidfile '"${JUMBO_ROOT}"'/var/run/redis.pid|;s|dir \./|dir '"${JUMBO_ROOT}"'/var/lib/redis/|;s|logfile stdout|logfile '"${JUMBO_ROOT}"'/var/log/redis.log| ' $srcdir/${pkgname}-${pkgver}/redis.conf
+    install -D -m644 "${srcdir}/${pkgname}-${pkgver}/redis.conf" "${pkgdir}/${JUMBO_ROOT}/etc/redis.conf"
+    install -D -m644 "${srcdir}/redis.ini" "${pkgdir}/${JUMBO_ROOT}/etc/supervisor.d/redis.ini"
+    sed -i 's|JUMBO_ROOT|'"${JUMBO_ROOT}"'|g' "${pkgdir}/${JUMBO_ROOT}/etc/supervisor.d/redis.ini"
+    mkdir -p "${pkgdir}/${JUMBO_ROOT}/var/lib/redis"
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

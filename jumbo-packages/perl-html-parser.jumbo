@@ -1,0 +1,22 @@
+pkgname=perl-html-parser
+_realname=HTML-Parser
+pkgver=3.69
+pkgrel=1
+pkgdesc="Perl HTML parser class"
+depends=('perl' 'perl-html-tagset') # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/${_realname}-${pkgver}.tar.gz")
+md5sums=('d22cc6468ce670a56034be907e4e7c54')
+
+jumbo_install() {
+  cd "${srcdir}/${_realname}-${pkgver}"
+  perl Makefile.PL INSTALLDIRS=vendor
+  make DESTDIR="${pkgdir}" install
+
+  # remove perllocal.pod and .packlist
+  find "${pkgdir}" -name .packlist -exec rm {} \;
+  find "${pkgdir}" -name perllocal.pod -exec rm {} \;
+  # remove empty directories
+  find "${pkgdir}" -depth -type d -empty -exec rmdir {} \;
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

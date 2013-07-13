@@ -1,0 +1,36 @@
+pkgname=curl
+pkgver=7.29.0
+pkgrel=1
+pkgdesc="An URL retrival utility and library"
+depends=('ca-certificates' 'libssh2' 'openssl' 'zlib') # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tar.gz"
+         "${JUMBO_REPO}/packages/${pkgname}/0001-Fix-NULL-pointer-reference-when-closing-an-unused-mu.patch")
+md5sums=('4f57d3b4a3963038bd5e04dbff385390'
+         '5bfd1899e8b19cfdd78774f6337f8b47')
+
+jumbo_install() {
+  cd "${srcdir}/${pkgname}-${pkgver}"
+
+  patch -Np1 <"${srcdir}/0001-Fix-NULL-pointer-reference-when-closing-an-unused-mu.patch"
+
+  ./configure \
+      --prefix="${JUMBO_ROOT}" \
+      --mandir="${JUMBO_ROOT}/share/man" \
+      --disable-dependency-tracking \
+      --disable-ldap \
+      --disable-ldaps \
+      --enable-ipv6 \
+      --enable-manual \
+      --enable-versioned-symbols \
+      --enable-threaded-resolver \
+      --without-libidn \
+      --with-random=/dev/urandom \
+      --with-ca-bundle="${JUMBO_ROOT}/etc/ssl/certs/ca-certificates.crt"
+  make
+  make DESTDIR="$pkgdir" install
+
+  # devel
+  install -Dm644 docs/libcurl/libcurl.m4 "${pkgdir}/${JUMBO_ROOT}/share/aclocal/libcurl.m4"
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

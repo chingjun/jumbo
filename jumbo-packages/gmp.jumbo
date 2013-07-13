@@ -1,0 +1,25 @@
+pkgname=gmp
+pkgver=5.0.5
+pkgrel=1
+pkgdesc="A free library for arbitrary precision arithmetic"
+depends=('xz') # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tar.xz")
+md5sums=('8aef50959acec2a1ad41d144ffe0f3b5')
+
+jumbo_install() {
+  cd "${srcdir}"
+  xz -c -d "${pkgname}-${pkgver}.tar.xz" | tar -x
+
+  cd "${srcdir}/${pkgname}-${pkgver}"
+  
+  ./configure --prefix="${JUMBO_ROOT}" \
+    --infodir="${JUMBO_ROOT}/share/info" \
+    --enable-cxx \
+    --build=x86_64-unknown-linux-gnu
+    # --build=x86_64-redhat-linux
+    # --build=${CHOST}
+  make
+  make DESTDIR="${pkgdir}" install
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

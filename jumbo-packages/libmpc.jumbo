@@ -1,0 +1,18 @@
+pkgname=libmpc
+pkgver=1.0.1
+pkgrel=1
+pkgdesc="Library for the arithmetic of complex numbers with arbitrarily high precision"
+depends=('mpfr') # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/mpc-${pkgver/_/-}.tar.gz")
+md5sums=('b32a2e1a3daa392372fbd586d1ed3679')
+
+jumbo_install() {
+  cd "${srcdir}/mpc-${pkgver}"
+
+  ./configure --prefix="${JUMBO_ROOT}"
+  make
+  make DESTDIR="${pkgdir}" install
+  mv ${pkgdir}/${JUMBO_ROOT}/share/info/{mpc,libmpc}.info
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

@@ -1,0 +1,24 @@
+pkgname=python-nltk
+pkgver=2.0.1
+pkgrel=1
+pkgdesc="Natural Language Toolkit"
+depends=('python' 'python-yaml' 'python-numpy') # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/nltk-${pkgver}.tar.gz")
+md5sums=('d9a33ce26ac61a27ecb2d2b9943604c6')
+
+jumbo_install() {
+  cd "${srcdir}/nltk-${pkgver}"
+
+  python setup.py install --prefix=${JUMBO_ROOT} --root=${pkgdir}
+}
+
+jumbo_post_install() {
+  cat <<"EOF"
+    >>
+    >> Since tk library is not installed in python
+    >> nltk tk related feature is not working
+    >>
+EOF
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

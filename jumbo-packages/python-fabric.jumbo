@@ -1,0 +1,15 @@
+pkgname=python-fabric
+pkgver=1.5.3
+pkgrel=1
+pkgdesc="Fabric is a simple, Pythonic tool for remote execution and deployment"
+depends=('python' 'python-paramiko') # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/Fabric-${pkgver}.tar.gz")
+md5sums=('8831c0a6cba9134a31b7c9405b145b21')
+
+jumbo_install() {
+   cd "${srcdir}/Fabric-${pkgver}"
+
+   python setup.py install --root="${pkgdir}" --optimize=1
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

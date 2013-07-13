@@ -1,0 +1,40 @@
+pkgname=make
+pkgver=3.82
+pkgrel=2
+pkgdesc="GNU make utility to maintain groups of programs"
+depends=() # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tar.bz2"
+         "${JUMBO_REPO}/packages/${pkgname}/bug30612.patch"
+         "${JUMBO_REPO}/packages/${pkgname}/bug30723.patch"
+         "${JUMBO_REPO}/packages/${pkgname}/make-3.82-sort-blank.patch"
+         "${JUMBO_REPO}/packages/${pkgname}/make-3.82-makeflags.patch")
+md5sums=('1a11100f3c63fcf5753818e59d63088f'
+         'c8f496b22191f9fb9420ab14c1a19a47'
+         '662e6450e19a5acdaa5c9fcb8ad78dea'
+         '7d01a99f389d8f08dec93ed479071ee4'
+         'bc12ad4d0c6e6c0e72d9fb61054f446b')
+
+jumbo_install() {
+  cd "${srcdir}/${pkgname}-${pkgver}"
+  
+  # http://savannah.gnu.org/bugs/?30612
+  patch -Np1 -i "${srcdir}/bug30612.patch"
+  
+  # http://savannah.gnu.org/bugs/?30723
+  patch -Np1 -i "${srcdir}/bug30723.patch"
+  
+  # https://bugs.archlinux.org/task/22733 (fix from Fedora)
+  patch -Np1 -i "${srcdir}/make-3.82-sort-blank.patch"
+  
+  # https://savannah.gnu.org/support/index.php?107487
+  # https://savannah.gnu.org/bugs/?33873
+  patch -Np0 -i "${srcdir}/make-3.82-makeflags.patch"
+  
+  ./configure --prefix="${JUMBO_ROOT}"
+  make
+  make DESTDIR="${pkgdir}" install
+
+  ln -s "${JUMBO_ROOT}/bin/make" "${pkgdir}/${JUMBO_ROOT}/bin/gmake"
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

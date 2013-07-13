@@ -1,0 +1,23 @@
+pkgname=socat
+pkgver=1.7.2.1
+pkgrel=1
+pkgdesc="Multipurpose relay"
+depends=('readline' 'openssl' 'ncurses') # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tar.gz")
+md5sums=('c807a2feb6fdd8cdbd8b075a36e8f5f4')
+
+jumbo_install() {
+  cd "${srcdir}/${pkgname}-${pkgver}"
+
+  ./configure --prefix="${JUMBO_ROOT}" \
+	  --mandir="${JUMBO_ROOT}/share/man"
+  cat - >> config.h <<EOF
+#ifndef HAVE_LINUX_ERRQUEUE_H
+#define HAVE_LINUX_ERRQUEUE_H 1
+#endif
+EOF
+  make
+  make DESTDIR="${pkgdir}" install
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

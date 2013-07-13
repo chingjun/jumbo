@@ -1,0 +1,54 @@
+pkgname=ncurses
+pkgver=5.9
+pkgrel=3
+pkgdesc="System V Release 4.0 curses emulation library"
+depends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tar.gz")
+md5sums=('8cb9c412e5f2d96bc6f459aa8c6282a1')
+
+jumbo_install () {
+  cd "${srcdir}"
+
+  mkdir ncurses{,w}-build
+
+  cd "${srcdir}/ncursesw-build"
+  ../${pkgname}-${pkgver}/configure --prefix="${JUMBO_ROOT}" --mandir="${JUMBO_ROOT}"/share/man \
+               --with-shared --with-normal --without-debug --without-ada \
+               --with-install-prefix="${pkgdir}" --enable-widec \
+               --enable-pc-files --enable-overwrite
+  make
+
+  cd "${srcdir}/ncurses-build"
+  ../${pkgname}-${pkgver}/configure --prefix="${JUMBO_ROOT}" --mandir="${JUMBO_ROOT}"/share/man \
+               --with-shared --with-normal --without-debug --without-ada \
+               --with-install-prefix="${pkgdir}" --with-chtype=long \
+               --enable-overwrite
+  make
+
+  cd "${srcdir}/ncursesw-build"
+  make PKG_CONFIG_LIBDIR="${JUMBO_ROOT}/lib/pkgconfig" install
+
+  # Fool packages looking to link to non-wide-character ncurses libraries
+  for lib in ncurses form panel menu; do
+    echo "INPUT(-l${lib}w)" > "${pkgdir}/${JUMBO_ROOT}/lib/lib${lib}.so"
+    ln -s "lib${lib}w.a" "${pkgdir}/${JUMBO_ROOT}/lib/lib${lib}.a"
+  done
+  ln -s libncurses++w.a "${pkgdir}/${JUMBO_ROOT}/lib/libncurses++.a"
+
+  for lib in ncurses ncurses++ form panel menu; do
+    ln -s "${lib}w.pc" "${pkgdir}/${JUMBO_ROOT}/lib/pkgconfig/${lib}.pc"
+  done
+
+  # Some packages look for -lcurses during build
+  echo "INPUT(-lncursesw)" > "${pkgdir}/${JUMBO_ROOT}/lib/libcursesw.so"
+  ln -s "libncurses.so" "${pkgdir}/${JUMBO_ROOT}/lib/libcurses.so"
+  ln -s "libncursesw.a" "${pkgdir}/${JUMBO_ROOT}/lib/libcursesw.a"
+  ln -s "libncurses.a" "${pkgdir}/${JUMBO_ROOT}/lib/libcurses.a"
+
+  # non-widec compatibility library
+  cd "${srcdir}/ncurses-build"
+  install -Dm755 "lib/libncurses.so.${pkgver}" "${pkgdir}/${JUMBO_ROOT}/lib/libncurses.so.${pkgver}"
+  ln -s "libncurses.so.${pkgver}" "${pkgdir}/${JUMBO_ROOT}/lib/libncurses.so.5"
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

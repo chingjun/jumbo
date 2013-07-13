@@ -1,0 +1,21 @@
+pkgname=file
+pkgver=5.11
+pkgrel=1
+pkgdesc="File type identification utility"
+depends=('zlib') # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/file-5.11.tar.gz")
+md5sums=("16a407bd66d6c7a832f3a5c0d609c27b")
+
+jumbo_install() {
+  cd "${srcdir}/${pkgname}-${pkgver}"
+  sed -i 's#\$(datadir)/misc#\$(datadir)#' configure
+  
+  ./configure --prefix="${JUMBO_ROOT}" --datadir="${JUMBO_ROOT}/share/file"
+  make 
+  make DESTDIR=${pkgdir} install
+
+  install -dm755 ${pkgdir}/${JUMBO_ROOT}/share/misc
+  ln -s ../file/magic.mgc ${pkgdir}/${JUMBO_ROOT}/share/misc
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

@@ -1,0 +1,23 @@
+pkgname=libfuse
+pkgver=2.9.2
+pkgrel=1
+pkgdesc="A library that makes it possible to implement a filesystem in a userspace program."
+depends=() # missdepends=('glibc')
+sources=("${JUMBO_REPO}/packages/${pkgname}/fuse-${pkgver}.tar.gz")
+md5sums=("7d80d0dc9cc2b9199a0c53787c151205")
+
+jumbo_install() {
+  cd "${srcdir}/fuse-${pkgver}"
+  # fix building with glibc-2.14
+  sed -i '1i#define _GNU_SOURCE' util/fusermount.c
+  ./configure --prefix="${JUMBO_ROOT}" --libdir="${JUMBO_ROOT}/lib" --enable-lib \
+              --enable-util --bindir="${JUMBO_ROOT}/bin"
+  make
+
+  make DESTDIR="${pkgdir}" install
+  # Remove unneeded directories
+  rm -rf "${pkgdir}/"{sbin,etc,dev}
+  rm -rf "${pkgdir}/${JUMBO_ROOT}/"{bin,share/man/man1}
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

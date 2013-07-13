@@ -1,0 +1,19 @@
+pkgname=libgcrypt
+pkgver=1.5.0
+pkgrel=1
+pkgdesc="a general purpose crypto library based on the code used"
+depends=('libgpg-error') # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tar.bz2")
+md5sums=('693f9c64d50c908bc4d6e01da3ff76d8')
+
+jumbo_install() {
+  cd "${srcdir}/${pkgname}-${pkgver}"
+
+  ./configure --prefix="${JUMBO_ROOT}" \
+    --disable-static \
+    --disable-padlock-support #$EXTRAFLAGS
+  make
+  make DESTDIR="${pkgdir}" install
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

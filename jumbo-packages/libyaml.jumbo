@@ -1,0 +1,17 @@
+pkgname=libyaml
+pkgver=0.1.4
+pkgrel=1
+pkgdesc="YAML 1.1 library"
+depends=() # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/yaml-${pkgver}.tar.gz")
+md5sums=('36c852831d02cf90508c29852361d01b')
+
+jumbo_install() {
+  cd "${srcdir}/yaml-${pkgver}"
+
+  ./configure --prefix="${JUMBO_ROOT}"
+  make
+  make DESTDIR="${pkgdir}" install
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

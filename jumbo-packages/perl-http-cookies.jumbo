@@ -1,0 +1,22 @@
+pkgname=perl-http-cookies
+_realname=HTTP-Cookies
+pkgver=6.01
+pkgrel=1
+pkgdesc="HTTP cookie jars"
+depends=('perl' 'perl-http-date' 'perl-http-message') # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/${_realname}-${pkgver}.tar.gz")
+md5sums=('ecfd0eeb88512033352c2f13c9580f03')
+
+jumbo_install() {
+  cd "${srcdir}/${_realname}-${pkgver}"
+  perl Makefile.PL INSTALLDIRS=vendor
+  make DESTDIR="${pkgdir}" install
+
+  # remove perllocal.pod and .packlist
+  find "${pkgdir}" -name .packlist -exec rm {} \;
+  find "${pkgdir}" -name perllocal.pod -exec rm {} \;
+  # remove empty directories
+  find "${pkgdir}" -depth -type d -empty -exec rmdir {} \;
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

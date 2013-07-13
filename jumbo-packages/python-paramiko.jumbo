@@ -1,0 +1,15 @@
+pkgname=python-paramiko
+pkgver=1.9.0
+pkgrel=1
+pkgdesc="Python module that implements the SSH2 protocol"
+depends=('python' 'python-crypto') # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/paramiko-${pkgver}.tar.gz")
+md5sums=("b78472021ff6586dd61ad6972032f54f")
+
+jumbo_install() {
+  cd "${srcdir}/paramiko-${pkgver}"
+
+  python setup.py install --root="${pkgdir}" --optimize=1
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

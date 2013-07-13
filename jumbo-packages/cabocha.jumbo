@@ -1,0 +1,17 @@
+pkgname=cabocha
+pkgver=0.64
+pkgrel=1
+pkgdesc="Yet Another Japanese Dependency Structure Analyzer"
+depends=('mecab' 'crfpp') # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tar.gz")
+md5sums=('da789f05fd53c52b38ad7a5d6cb9594c')
+
+jumbo_install() {
+  cd "${srcdir}/${pkgname}-${pkgver}"
+
+  ./configure --prefix="${JUMBO_ROOT}" --with-charset=utf8 --enable-utf8-only
+  make
+  make DESTDIR="${pkgdir}" install
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

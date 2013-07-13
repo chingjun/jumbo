@@ -1,0 +1,17 @@
+pkgname=emacs-php-mode
+pkgver=1.10
+pkgrel=1
+pkgdesc="A PHP mode for GNU Emacs. From http://github.com/ejmr/php-mode."
+depends=('emacs') # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tar.bz2")
+md5sums=('6789537e99a34c25176fc8e094a11c71')
+
+jumbo_install() {
+  cd "${srcdir}/${pkgname}-${pkgver}"
+
+  mkdir -p ${pkgdir}/${JUMBO_ROOT}/share/emacs/site-lisp
+  emacs -Q -L . -batch -f batch-byte-compile *.el
+  cp *.el *.elc "${pkgdir}/${JUMBO_ROOT}/share/emacs/site-lisp/"
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

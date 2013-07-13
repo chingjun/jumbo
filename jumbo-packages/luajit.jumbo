@@ -1,0 +1,25 @@
+pkgname=luajit
+pkgver=2.0.1
+pkgrel=1
+pkgdesc="Just-In-Time Compiler for the Lua programming language"
+depends=("gcc46") # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/LuaJIT-${pkgver}.tar.gz"
+         "${JUMBO_REPO}/packages/${pkgname}/luajit-2.0.1-hotfix1.patch")
+md5sums=("85e406e8829602988eb1233a82e29f1f"
+         "5186c5901e37679a3c835d7b7cdac88e")
+
+jumbo_install() {
+  cd "${srcdir}/LuaJIT-${pkgver}"
+
+  export PATH="${JUMBO_ROOT}/opt/gcc46/bin:${PATH}"
+
+  # disable flock
+  export LINK=g++
+
+  patch -Np1 -i "${srcdir}"/luajit-2.0.1-hotfix1.patch
+
+  make amalg PREFIX="${JUMBO_ROOT}"
+  make install DESTDIR="${pkgdir}" PREFIX="${JUMBO_ROOT}"
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

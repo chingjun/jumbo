@@ -1,0 +1,20 @@
+pkgname=python-pycares
+_pkgname=pycares
+pkgver=0.5.0
+pkgrel=1
+pkgdesc="Python interface for c-ares"
+depends=("python" "c-ares") # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/${_pkgname}-${pkgver}.tar.gz"
+         "${JUMBO_REPO}/packages/${pkgname}/pycares-0.5.0-use-system-cares.patch")
+md5sums=("32eb52c17a8fc2a65751db22e93b70a9"
+         "5bf8153173f7a5008f0b6bd784764a37")
+
+jumbo_install() {
+  cd "${srcdir}/${_pkgname}-${pkgver}"
+
+  patch -Np0 -i "${srcdir}"/pycares-0.5.0-use-system-cares.patch
+  python setup.py install --root="${pkgdir}" --optimize=1
+
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

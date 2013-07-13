@@ -1,0 +1,15 @@
+pkgname=mongodb-bin
+pkgver=2.2.2
+pkgrel=1
+pkgdesc="A high-performance, open source, schema-free document-oriented database"
+depends=() # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/mongodb-linux-x86_64-static-legacy-${pkgver}.tgz")
+md5sums=('35dc3b865df480ed0f9e51e5519c3c26')
+
+jumbo_install() {
+  cd "${srcdir}/mongodb-linux-x86_64-static-legacy-${pkgver}"
+  install -dm755 "${pkgdir}/${JUMBO_ROOT}"
+  cp -ar bin "${pkgdir}/${JUMBO_ROOT}"
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

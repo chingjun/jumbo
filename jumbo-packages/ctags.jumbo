@@ -1,0 +1,18 @@
+pkgname=ctags
+pkgver=5.8
+pkgrel=1
+pkgdesc="Generates an index file of language objects found in source files"
+depends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tar.gz")
+md5sums=('c00f82ecdcc357434731913e5b48630d')
+
+jumbo_install() {
+  cd "${srcdir}/${pkgname}-${pkgver}"
+
+  ./configure --prefix="${JUMBO_ROOT}" \
+    --disable-external-sort
+  make
+  make prefix="${pkgdir}/${JUMBO_ROOT}" install
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

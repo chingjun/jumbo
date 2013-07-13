@@ -1,0 +1,17 @@
+pkgname=libspatialindex
+pkgver=1.8.0
+pkgrel=1
+pkgdesc="C++ implementation of R*-tree, an MVR-tree and a TPR-tree with C API"
+depends=() # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname#lib}-src-${pkgver}.tar.gz")
+md5sums=("aa78e2c641c472df257f49cd140669c4")
+
+jumbo_install() {
+	cd "${srcdir}/${pkgname#lib}-src-${pkgver}"
+
+	./configure --prefix="${JUMBO_ROOT}"
+	make
+	make DESTDIR="${pkgdir}" install
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

@@ -1,0 +1,20 @@
+pkgname=perl-ipc-run
+pkgver=0.92
+pkgrel=1
+pkgdesc="IPC::Run - system() and background procs w/ piping, redirs, ptys"
+depends=("perl" "perl-io-tty") # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/IPC-Run-0.92.tar.gz")
+md5sums=("9d209c8d4bda50bea5f5a09e03db173e")
+
+jumbo_install() {
+  cd "${srcdir}"/IPC-Run-$pkgver
+
+  PERL_MM_USE_DEFAULT=1 perl Makefile.PL INSTALLDIRS=vendor
+  make
+  make install DESTDIR="${pkgdir}"
+
+  find "${pkgdir}" -name perllocal.pod -exec rm -v {} \;
+  find "${pkgdir}" -name .packlist -exec rm -v {} \;
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

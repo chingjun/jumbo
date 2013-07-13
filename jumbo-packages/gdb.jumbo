@@ -1,0 +1,31 @@
+pkgname=gdb
+pkgver=7.5.1
+pkgrel=1
+pkgdesc="The GNU Debugger"
+depends=('ncurses' 'expat' 'python' 'readline') # missdepends=()
+backups=('etc/gdb/gdbinit')
+sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tar.bz2")
+md5sums=('3f48f468b24447cf24820054ff6e85b1')
+
+jumbo_install() {
+  cd "${srcdir}/${pkgname}-${pkgver}"
+  
+  ./configure --prefix="${JUMBO_ROOT}" --disable-nls \
+    --with-system-readline \
+    --with-python="${JUMBO_ROOT}/bin/python2" \
+    --with-system-gdbinit="${JUMBO_ROOT}/etc/gdb/gdbinit"
+  make
+  make DESTDIR="${pkgdir}" install
+
+  # install "custom" system gdbinit
+  install -dm755 "${pkgdir}/${JUMBO_ROOT}/etc/gdb"
+  touch "${pkgdir}/${JUMBO_ROOT}/etc/gdb/gdbinit"
+
+  # resolve conflicts with binutils
+  rm -f "${pkgdir}/${JUMBO_ROOT}"/include/{ansidecl,bfd,bfdlink,dis-asm,symcat}.h
+  rm -f "${pkgdir}/${JUMBO_ROOT}"/lib{,64}/{libbfd,libiberty,libopcodes}.{a,la}
+  rmdir "${pkgdir}/${JUMBO_ROOT}"/lib{,64}
+  rm -f "${pkgdir}/${JUMBO_ROOT}"/share/info/{bfd,configure,standards}.info
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

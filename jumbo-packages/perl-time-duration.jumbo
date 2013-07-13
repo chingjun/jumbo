@@ -1,0 +1,24 @@
+pkgname=perl-time-duration
+pkgver=1.06
+pkgrel=1
+pkgdesc="rounded or exact English expression of durations"
+depends=("perl") # missdepends=()
+# optdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/Time-Duration-1.06.tar.gz")
+md5sums=("d65108e0e4e8ffb38e28d532f8ddcd12")
+
+jumbo_install() {
+  cd "${srcdir}"/Time-Duration-$pkgver
+
+  rm -v t/*.t
+  find . -type f -exec sed -i -e "/Test::Pod/d" {} \;
+  PERL_MM_USE_DEFAULT=1 perl Makefile.PL INSTALLDIRS=vendor
+
+  make
+  make install DESTDIR="${pkgdir}"
+
+  find "${pkgdir}" -name '.packlist' -exec rm -v {} \;
+  find "${pkgdir}" -name '*.pod' -exec rm -v {} \;
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

@@ -1,0 +1,159 @@
+pkgname=llvm
+pkgver=3.2
+pkgrel=2
+pkgdesc="Low Level Virtual Machine(including clang, C language family frontend for LLVM)"
+depends=("make" "binutils" "gcc46" "perl" "libffi" "python" "python-sphinx") # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/llvm-${pkgver}.src.tar.gz"
+         "${JUMBO_REPO}/packages/${pkgname}/clang-${pkgver}.src.tar.gz"
+         "${JUMBO_REPO}/packages/${pkgname}/compiler-rt-${pkgver}.src.tar.gz"
+         "${JUMBO_REPO}/packages/${pkgname}/cindexer-clang-path.patch"
+         "${JUMBO_REPO}/packages/${pkgname}/enable-lto.patch"
+         "${JUMBO_REPO}/packages/${pkgname}/llvm-3.1-fix-debug-line-info.patch"
+         "${JUMBO_REPO}/packages/${pkgname}/clang-3.1-fix-libprofile_rt.a-location.patch"
+         "${JUMBO_REPO}/packages/${pkgname}/000-remove-hash-style.patch"
+         "${JUMBO_REPO}/packages/${pkgname}/010-search-jumbo-opt-gcc46-and-binutils.patch"
+         "${JUMBO_REPO}/packages/${pkgname}/020-add-default-gcc46-rpath.patch")
+md5sums=('71610289bbc819e3e15fdd562809a2d7'
+         '3896ef4334df08563b05d0848ba80582'
+         '400e91a6a7f2e2f48bc38c3ca864a5aa'
+         '87a7162dbe99e9ffce6c40bd09f5f4f0'
+         '0a7b546a2f41c3bc56d83af154f7edfb'
+         'dabebac0c9944576ac073fe713f5fa68'
+         'c4c51b3bce0b7ee5d3446406bfb6da0b'
+         '159594e666bceb507395cd665df224e6'
+         '523b23d4cdea6b1849645801ebfb12fb'
+         '5b4481cffaf97ef6bf082d1df9af0940')
+
+jumbo_install() {
+  cd "${srcdir}/llvm-${pkgver}.src"
+
+  # At the present, clang must reside inside the LLVM source code tree to build
+  # See http://llvm.org/bugs/show_bug.cgi?id=4840
+  rm -rf tools/clang
+  cp -r "${srcdir}/clang-${pkgver}.src" tools/clang
+
+  rm -rf projects/compiler-rt
+  cp -r "${srcdir}/compiler-rt-${pkgver}.src" projects/compiler-rt
+
+  # Fix symbolic links from OCaml bindings to LLVM libraries
+  sed -i "s:\$(PROJ_libdir):${JUMBO_ROOT}/lib/llvm:" bindings/ocaml/Makefile.ocaml
+
+  # Fix installation directories, ./configure doesn't seem to set them right
+  sed -i -e "s:\$(PROJ_prefix)/etc/llvm:\$(PROJ_prefix)/etc/llvm:" \
+         -e "s:\$(PROJ_prefix)/lib:\$(PROJ_prefix)/lib/llvm:" \
+         -e "s:\$(PROJ_prefix)/docs/llvm:\$(PROJ_prefix)/share/doc/llvm:" \
+    Makefile.config.in
+  sed -i '/ActiveLibDir = ActivePrefix/s:lib:lib/llvm:' \
+    tools/llvm-config/llvm-config.cpp
+  sed -i 's:LLVM_LIBDIR="${prefix}/lib":LLVM_LIBDIR="${prefix}/lib/llvm":' \
+    autoconf/configure.ac \
+    configure
+
+  # Fix insecure rpath (http://bugs.archlinux.org/task/14017)
+  sed -i 's:$(RPATH) -Wl,$(\(ToolDir\|LibDir\|ExmplDir\))::g' Makefile.rules
+
+  # Fix clang path in CIndexer.cpp (https://bugs.archlinux.org/task/22799)
+  patch -d tools/clang -Np0 -i "${srcdir}/cindexer-clang-path.patch"
+
+  # Make -flto work
+  # Use gold instead of default linker, and always use the plugin
+  patch -d tools/clang -Np0 -i "${srcdir}/enable-lto.patch"
+
+  # Fix FS#29984: [clang] -coverage is broken
+  patch -d tools/clang -Np1 -i \
+    "${srcdir}/clang-3.1-fix-libprofile_rt.a-location.patch"
+
+  # Fix FS#31098: LLVM 3.1 produces invalid debug information
+  # http://llvm.org/bugs/show_bug.cgi?id=13211
+  patch -Np1 -i "${srcdir}/llvm-3.1-fix-debug-line-info.patch"
+
+  # Drop "svn" suffix from version string
+  sed -i 's/3\.2svn/3.2/g' configure
+
+  # Include location of libffi headers in CPPFLAGS
+  export CPPFLAGS="${CPPFLAGS} $(pkg-config --cflags libffi)"
+  export LDFLAGS="${LDFLAGS} -Wl,-rpath=${JUMBO_ROOT}/lib/llvm"
+
+  # Jumbo: Remove --hash-style option from linker arguments
+  patch -p1 -i "${srcdir}/000-remove-hash-style.patch"
+
+  # Jumbo: Search jumbo opt gcc46 and binutils
+  patch -p1 -i "${srcdir}/010-search-jumbo-opt-gcc46-and-binutils.patch"
+
+  # Jumbo: Add gcc46 libs to rpath
+  patch -p1 -i "${srcdir}/020-add-default-gcc46-rpath.patch"
+
+  # Jumbo: Use gcc46 and binutils
+  export PATH="${JUMBO_ROOT}/opt/gcc46/bin:${JUMBO_ROOT}/opt/binutils/bin:${PATH}"
+
+  # Force the use of GCC instead of clang
+  CC=gcc CXX=g++ \
+  ./configure \
+    --prefix="${JUMBO_ROOT}" \
+    --libdir="${JUMBO_ROOT}/lib/llvm" \
+    --sysconfdir="${JUMBO_ROOT}/etc" \
+    --enable-shared \
+    --enable-libffi \
+    --enable-targets=all \
+    --disable-expensive-checks \
+    --disable-debug-runtime \
+    --disable-assertions \
+    --with-binutils-include="${JUMBO_ROOT}/opt/binutils/include" \
+    --with-gcc-toolchain="${JUMBO_ROOT}/opt/gcc46" \
+    --enable-optimized
+
+  make REQUIRES_RTTI=1
+  make -C docs -f Makefile.sphinx man
+  make -C docs -f Makefile.sphinx html
+
+  ####################
+  ### Install llvm ###
+  ####################
+
+  cd "${srcdir}/llvm-${pkgver}.src"
+
+  # We move the clang directory out of the tree so it won't get installed and
+  # then we bring it back in for the clang package
+  mv tools/clang "${srcdir}"
+  make DESTDIR="${pkgdir}" install
+  mv "${srcdir}/clang" tools
+
+  # Fix permissions of static libs
+  chmod -x "${pkgdir}/${JUMBO_ROOT}"/lib/llvm/*.a
+
+  # Get rid of example Hello transformation
+  rm "${pkgdir}/${JUMBO_ROOT}"/lib/llvm/*LLVMHello.*
+
+  # Symlink LLVMgold.so into ${JUMBO_ROOT}/opt/binutils/lib/bfd-plugins
+  # (https://bugs.archlinux.org/task/28479)
+  install -d "${pkgdir}/${JUMBO_ROOT}/opt/binutils/lib/bfd-plugins"
+  ln -s "${JUMBO_ROOT}/lib/llvm/LLVMgold.so" "${pkgdir}/${JUMBO_ROOT}/opt/binutils/lib/bfd-plugins/LLVMgold.so"
+
+  # Install man pages
+  install -d "${pkgdir}/${JUMBO_ROOT}/share/man/man1"
+  cp docs/_build/man/*.1 "${pkgdir}/${JUMBO_ROOT}/share/man/man1/"
+
+  # Install html docs
+  cp -r docs/_build/html/* "${pkgdir}/${JUMBO_ROOT}/share/doc/llvm/html/"
+  rm -r "${pkgdir}/${JUMBO_ROOT}/share/doc/llvm/html/_sources"
+
+  #####################
+  ### Install clang ###
+  #####################
+
+  # Fix installation path for clang docs
+  sed -i 's:$(PROJ_prefix)/share/doc/llvm:$(PROJ_prefix)/share/doc/clang:' \
+    "${srcdir}/llvm-${pkgver}.src/Makefile.config"
+
+  cd "${srcdir}/llvm-${pkgver}.src/tools/clang"
+  make DESTDIR="${pkgdir}" install
+
+  # Fix permissions of static libs
+  chmod -x "${pkgdir}/${JUMBO_ROOT}"/lib/llvm/*.a
+
+  # Revert the path change in case we want to do a repackage later
+  sed -i 's:$(PROJ_prefix)/share/doc/clang:$(PROJ_prefix)/share/doc/llvm:' \
+    "$srcdir/llvm-$pkgver.src/Makefile.config"
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

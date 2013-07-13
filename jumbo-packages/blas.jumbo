@@ -1,0 +1,31 @@
+pkgname=blas
+pkgver=3.4.2
+pkgrel=1
+pkgdesc="Basic Linear Algebra Subprograms"
+depends=('gcc46' 'cmake') # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/lapack-${pkgver}.tgz")
+md5sums=("61bf1a8a4469d4bdb7604f5897179478")
+	
+jumbo_install() {
+  cd "${srcdir}"
+
+  export PATH="${JUMBO_ROOT}/opt/gcc46/bin:${PATH}"
+
+  install -d build
+  cd build
+  cmake ../lapack-${pkgver} \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_SKIP_RPATH=ON \
+    -DBUILD_SHARED_LIBS=ON \
+    -DCMAKE_INSTALL_PREFIX="${JUMBO_ROOT}" \
+    -DCMAKE_Fortran_COMPILER=gfortran
+  make
+
+  install -m755 -d "${pkgdir}/${JUMBO_ROOT}/lib"
+  install -m755 "${srcdir}/build/lib/libblas.so" \
+    "${pkgdir}/${JUMBO_ROOT}/lib/"
+  ln -sf libblas.so "${pkgdir}/${JUMBO_ROOT}/lib/libblas.so.${pkgver}"
+  ln -sf libblas.so "${pkgdir}/${JUMBO_ROOT}/lib/libblas.so.3"
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

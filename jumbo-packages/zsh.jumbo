@@ -1,0 +1,48 @@
+pkgname=zsh
+pkgver=5.0.2
+pkgrel=1
+pkgdesc='A very advanced and programmable command interpreter (shell) for UNIX'
+depends=('pcre') # missdepends=('libcap' 'gdbm')
+sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tar.bz2")
+md5sums=('b8f2ad691acf58b3252225746480dcad')
+
+jumbo_install() {
+	cd "${srcdir}/${pkgname}-${pkgver}"
+
+	# FS#16360
+	sed -i 's/init.d/rc.d/g' Doc/Zsh/compsys.yo \
+				 Doc/zsh.texi \
+				 Completion/Unix/Type/_services \
+				 Completion/Unix/Command/_init_d
+
+	# Set correct keymap path
+	sed -i "s#/usr/share/keymaps#${JUMBO_ROOT}/share/kbd/keymaps#g" Completion/Unix/Command/_loadkeys
+
+	# Remove unneeded and conflicting completion scripts
+	rm -rf Completion/{AIX,BSD,Cygwin,Darwin,Debian,Mandriva,openSUSE,Redhat,Solaris}
+	rm -f  Completion/Linux/Command/_{pkgtool,rpmbuild,yast}
+	rm -f  Completion/Unix/Command/_osc
+
+	./configure --prefix=${JUMBO_ROOT} \
+		--bindir=${JUMBO_ROOT}/bin \
+		--enable-etcdir=${JUMBO_ROOT}/etc/zsh \
+		--enable-zshenv=${JUMBO_ROOT}/etc/zsh/zshenv \
+		--enable-zlogin=${JUMBO_ROOT}/etc/zsh/zlogin \
+		--enable-zlogout=${JUMBO_ROOT}/etc/zsh/zlogout \
+		--enable-zprofile=${JUMBO_ROOT}/etc/zsh/zprofile \
+		--enable-zshrc=${JUMBO_ROOT}/etc/zsh/zshrc \
+		--enable-maildir-support \
+		--with-term-lib='ncursesw' \
+		--enable-multibyte \
+		--enable-function-subdirs \
+		--enable-fndir=${JUMBO_ROOT}/share/zsh/functions \
+		--enable-scriptdir=${JUMBO_ROOT}/share/zsh/scripts \
+		--with-tcsetpgrp \
+		--enable-pcre \
+		--enable-cap \
+		--enable-zsh-secure-free
+	make
+	make DESTDIR="${pkgdir}" install
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

@@ -1,0 +1,17 @@
+pkgname=cgdb
+pkgver=0.6.7
+pkgrel=1
+pkgdesc="cgdb is a lightweight curses (terminal-based) interface to the GNU Debugger (GDB)."
+depends=('gdb' 'ncurses' 'readline') # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tar.gz")
+md5sums=('e2d9a973d2683faf8130a82703bf6a31')
+
+jumbo_install() {
+  cd "${srcdir}/${pkgname}-${pkgver}"
+
+  ./configure --prefix="${JUMBO_ROOT}"
+  make
+  make DESTDIR="${pkgdir}" install
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

@@ -1,0 +1,18 @@
+pkgname=valgrind
+pkgver=3.8.1
+pkgrel=1
+pkgdesc="A tool to help find memory-management problems in programs"
+depends=('perl' 'gdb') # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tar.bz2")
+md5sums=('288758010b271119a0ffc0183f1d6e38')
+
+jumbo_install() {
+  cd "${srcdir}/${pkgname}-${pkgver}"
+
+  ./configure --prefix="${JUMBO_ROOT}" --mandir="${JUMBO_ROOT}/share/man" \
+    --enable-only64bit
+  make
+  make DESTDIR="${pkgdir}" install
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

@@ -1,0 +1,35 @@
+pkgname=google-gmock
+pkgver=1.6.0
+pkgrel=1
+_ubuntu_ver=0ubuntu1
+pkgdesc="Google Mock - A library for writing and using C++ mock classes"
+depends=('unzip' 'python' 'google-gtest') # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/gmock-${pkgver}.zip"
+         "${JUMBO_REPO}/packages/${pkgname}/google-mock_${pkgver}-${_ubuntu_ver}.debian.tar.gz")
+md5sums=('f547f47321ca88d3965ca2efdcc2a3c1'
+         '9cabe826b8065a18de963e7a6ab6e46b')
+
+jumbo_install() {
+  cd "${srcdir}"
+  unzip "gmock-${pkgver}.zip"
+
+  cd "${srcdir}/gmock-${pkgver}"
+
+  for i in $(cat "${srcdir}/debian/patches/series" | grep -v '#'); do
+    patch -Np1 -i "${srcdir}/debian/patches/${i}"
+  done
+
+  ./configure --prefix="${JUMBO_ROOT}" --enable-external-gtest
+  make
+  make DESTDIR="${pkgdir}/" install
+
+  install -d -m755 "${pkgdir}/${JUMBO_ROOT}/bin/"
+  install -d -m755 "${pkgdir}/${JUMBO_ROOT}/share/gmock/"
+  install -m755 "scripts/generator/gmock_gen.py" "${pkgdir}/${JUMBO_ROOT}/bin/"
+  cp -r --preserve=mode,links "scripts/generator/cpp" "${pkgdir}/${JUMBO_ROOT}/share/gmock/"
+  for f in $(ls "${pkgdir}/${JUMBO_ROOT}"/bin/*.py); do mv ${f} $(echo ${f} | sed s/\.py//); done
+  rm -f "${pkgdir}/${JUMBO_ROOT}"/lib/libgtest*
+  rm -rf "${pkgdir}/${JUMBO_ROOT}"/include/gtest*
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

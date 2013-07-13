@@ -1,0 +1,28 @@
+pkgname=erlang
+pkgver=R15B03_1
+pkgrel=1
+pkgdesc='A small concurrent functional programming language developed by Ericsson.'
+depends=('ncurses' 'perl' 'openssl') # missdepends=('sun-java6' 'wxgtk' 'unixodbc' 'mesa')
+sources=("${JUMBO_REPO}/packages/${pkgname}/otp_src_${pkgver/_/-}.tar.gz"
+         "${JUMBO_REPO}/packages/${pkgname}/otp_doc_man_${pkgver/_/-}.tar.gz")
+md5sums=('eccd1e6dda6132993555e088005019f2'
+         '1d7ace92e8cf41abbee1dba8192b7d5f')
+
+jumbo_install() {
+  cd "${srcdir}/otp_src_${pkgver/_1/}"
+
+  # dirty fix for the wrong internal pcre include path
+  CFLAGS="-Ipcre ${CFLAGS}" ./configure --prefix="${JUMBO_ROOT}" --enable-smp-support
+  make
+  make DESTDIR="${pkgdir}" install
+
+  # Install documentation
+  install -d "${pkgdir}/${JUMBO_ROOT}/share/doc/erlang"
+  install -m0644 "${srcdir}/otp_src_${pkgver/_1/}"/README.md "${srcdir}"/README \
+    "$pkgdir/${JUMBO_ROOT}/share/doc/erlang"
+
+  # Install man pages
+  cp -r "${srcdir}/man" "${pkgdir}/${JUMBO_ROOT}/lib/erlang"
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

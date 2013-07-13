@@ -1,0 +1,23 @@
+pkgname=htop
+pkgver=1.0.1
+pkgrel=2
+pkgdesc="Interactive process viewer"
+depends=('ncurses' 'python') # missdepends=('lsof' 'strace')
+sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tar.gz")
+md5sums=('d3b80d905a6bff03f13896870787f901')
+
+jumbo_install() {
+  cd "${srcdir}/${pkgname}-${pkgver}"
+
+  sed -i 's|ncursesw/curses.h|curses.h|' RichString.h RichString.c configure
+  sed -i 's|python|python2|' scripts/MakeHeader.py
+  ./configure --prefix="${JUMBO_ROOT}" \
+    --enable-unicode \
+    --enable-openvz \
+    --enable-vserver \
+    --enable-cgroup
+  make
+  make DESTDIR="${pkgdir}" install
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

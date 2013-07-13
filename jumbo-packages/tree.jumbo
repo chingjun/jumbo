@@ -1,0 +1,16 @@
+pkgname=tree
+pkgver=1.6.0
+pkgrel=2
+pkgdesc="A directory listing program displaying a depth indented list of files"
+depends=() # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tgz")
+md5sums=('04e967a3f4108d50cde3b4b0e89e970a')
+
+jumbo_install() {
+  cd "${srcdir}/${pkgname}-${pkgver}"
+
+  make
+  make prefix="${pkgdir}/${JUMBO_ROOT}" MANDIR="${pkgdir}/${JUMBO_ROOT}/share/man/man1" install
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

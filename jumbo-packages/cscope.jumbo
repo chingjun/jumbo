@@ -1,0 +1,20 @@
+pkgname=cscope
+pkgver=15.8.a
+_realver=15.8a
+pkgrel=1
+pkgdesc="A developers tool for browsing program code"
+depends=('ncurses') # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${_realver}.tar.gz")
+md5sums=('b5c898ccedcfe2d4aa69537dad73b610')
+
+jumbo_install() {
+  cd "${srcdir}/${pkgname}-${_realver}"
+
+  ./configure --prefix="${JUMBO_ROOT}"
+  make
+  make DESTDIR="${pkgdir}" install
+
+  install -d "${pkgdir}/${JUMBO_ROOT}/lib/cs"
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

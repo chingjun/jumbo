@@ -1,0 +1,20 @@
+pkgname=memcached
+pkgver=1.4.15
+pkgrel=1
+pkgdesc="A distributed memory object caching system"
+depends=('libevent') # missdepends=()
+# optdepends=('perl')
+sources=("${JUMBO_REPO}/packages/${pkgname}/memcached-1.4.15.tar.gz")
+md5sums=("36ea966f5a29655be1746bf4949f7f69")
+
+jumbo_install() {
+  cd "${srcdir}/${pkgname}-${pkgver}"
+
+  ./configure --prefix="${JUMBO_ROOT}"
+  make
+  make DESTDIR="${pkgdir}" install
+
+  install -D -m 755 scripts/memcached-tool "${pkgdir}/${JUMBO_ROOT}/bin/memcached-tool"
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

@@ -1,0 +1,17 @@
+pkgname=python-kazoo
+pkgver=0.9
+pkgrel=1
+pkgdesc="Higher Level Zookeeper Client"
+depends=("python" "python-zope-interface" "unzip") # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/kazoo-${pkgver}.zip")
+md5sums=("714a6dc026be9cff3ae7cab589f79c30")
+
+jumbo_install() {
+  cd "${srcdir}"
+  unzip "kazoo-${pkgver}.zip"
+  cd "${srcdir}/kazoo-${pkgver}"
+
+  python setup.py install --root="${pkgdir}" --optimize=1
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

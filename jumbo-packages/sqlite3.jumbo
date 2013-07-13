@@ -1,0 +1,20 @@
+pkgname=sqlite3
+pkgver=3.7.14.1
+_amalgamationver=3071401
+pkgrel=1
+pkgdesc="A C library that implements an SQL database engine"
+depends=('readline')
+sources=("${JUMBO_REPO}/packages/${pkgname}/sqlite-autoconf-${_amalgamationver}.tar.gz")
+md5sums=('4cf3fd434bbb6e50777019ff3507bfa5')
+
+jumbo_install() {
+  cd "${srcdir}/sqlite-autoconf-${_amalgamationver}"
+
+  export CFLAGS="$CFLAGS -DSQLITE_ENABLE_FTS3=1 -DSQLITE_ENABLE_COLUMN_METADATA=1 -DSQLITE_ENABLE_UNLOCK_NOTIFY -DSQLITE_SECURE_DELETE"
+  ./configure --prefix="${JUMBO_ROOT}" \
+    --disable-static
+  make
+  make DESTDIR="${pkgdir}" install
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

@@ -1,0 +1,18 @@
+pkgname=apr-util
+pkgver=1.5.1
+pkgrel=1
+pkgdesc="The Apache Portable Runtime"
+depends=('apr' 'expat') # missdepends=('gdbm' 'db' 'libldap' 'unixodbc')
+sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tar.bz2")
+md5sums=('9c1db8606e520f201c451ec9a0b095f6')
+
+jumbo_install() {
+  cd "${srcdir}/${pkgname}-${pkgver}"
+
+  ./configure --prefix="${JUMBO_ROOT}" --with-apr="${JUMBO_ROOT}" \
+    --without-pgsql --without-mysql --without-sqlite2 --without-sqlite3
+  make
+  make DESTDIR="${pkgdir}" install
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

@@ -1,0 +1,64 @@
+pkgname=subversion
+pkgver=1.6.17
+pkgrel=3
+pkgdesc="A Modern Concurrent Version Control System (aka SVN)"
+depends=('perl' 'neon' 'apr-util' 'sqlite3' 'swig' 'python') # missdepends=('db' 'file')
+sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tar.bz2"
+         "${JUMBO_REPO}/packages/${pkgname}/subversion.rpath.fix.patch"
+         "${JUMBO_REPO}/packages/${pkgname}/subversion.suppress.deprecation.warnings.patch"
+         "${JUMBO_REPO}/packages/${pkgname}/subversion-perl-bindings.patch")
+md5sums=('81e5dc5beee4b3fc025ac70c0b6caa14'
+         '6b4340ba9d8845cd8497e013ae01be3f'
+         '1166f3b7413d7e7450299b3525680bbe'
+         '0591aa39837931161b4d61ff35c7b147')
+
+jumbo_install() {
+  cd "${srcdir}/${pkgname}-${pkgver}"
+
+  unset MAKEFLAGS
+  export PERL="${JUMBO_ROOT}/bin/perl"
+  export PYTHON="${JUMBO_ROOT}/bin/python"
+
+  patch -Np0 -i ../subversion.rpath.fix.patch
+  patch -Np1 -i ../subversion.suppress.deprecation.warnings.patch
+  patch -Np1 -i ../subversion-perl-bindings.patch
+
+  autoreconf
+  ./configure --prefix="${JUMBO_ROOT}" \
+    --with-apr="${JUMBO_ROOT}" \
+    --with-apr-util="${JUMBO_ROOT}" \
+    --with-neon="${JUMBO_ROOT}" \
+    --with-sqlite="${JUMBO_ROOT}" \
+    --with-zlib="${JUMBO_ROOT}"
+
+  make
+  make DESTDIR="${pkgdir}" install
+
+  make swig_pydir="${JUMBO_ROOT}/lib/python2.7/site-packages/libsvn" \
+    swig_pydir_extra="${JUMBO_ROOT}/lib/python2.7/site-packages/svn" swig-py
+  make DESTDIR="${pkgdir}" \
+    swig_pydir="${JUMBO_ROOT}/lib/python2.7/site-packages/libsvn" \
+    swig_pydir_extra="${JUMBO_ROOT}/lib/python2.7/site-packages/svn" install-swig-py
+
+  make swig-pl-lib
+  make DESTDIR="${pkgdir}" install-swig-pl-lib
+
+  pushd .
+  cd subversion/bindings/swig/perl/native
+  perl Makefile.PL INSTALLDIRS=vendor
+  make DESTDIR="${pkgdir}" install
+  popd
+
+  install -d "${pkgdir}/${JUMBO_ROOT}"/share/subversion
+  cp -a tools/hook-scripts "${pkgdir}/${JUMBO_ROOT}"/share/subversion/
+  rm -f "${pkgdir}/${JUMBO_ROOT}"/share/subversion/hook-scripts/*.in
+
+  find ${pkgdir} -name perllocal.pod -print0 | xargs -0 rm -f
+  find ${pkgdir} -name .packlist -print0 | xargs -0 rm -f
+
+  # # bash completion
+  # install -Dm 644 tools/client-side/bash_completion \
+  #   "${pkgdir}"/etc/bash_completion.d/subversion
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

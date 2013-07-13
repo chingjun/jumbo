@@ -1,0 +1,17 @@
+pkgname=mecab-unidic
+pkgver=1.3.12
+pkgrel=2
+pkgdesc="Unidic dictionary for mecab"
+depends=('mecab') # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/unidic-${pkgver}-pkg.tar.gz")
+md5sums=('e4740a2c0ae3c97e9a8f11dade4f4d5d')
+
+jumbo_install() {
+  cd "${srcdir}/unidic-${pkgver}-pkg"
+
+  ./configure --prefix="${JUMBO_ROOT}" --with-packagedir="${JUMBO_ROOT}/lib/mecab" --with-use-chasen=0
+  cd "unidic-mecab-${pkgver}"
+  make DESTDIR="${pkgdir}" install
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

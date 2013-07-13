@@ -1,0 +1,27 @@
+pkgname=mpfr
+_pkgver=3.1.1
+_patchlevel=p2
+pkgver=${_pkgver}.${_patchlevel}
+pkgrel=1
+pkgdesc="Multiple-precision floating-point library"
+depends=('gmp' 'xz') # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${_pkgver}.tar.xz"
+         "${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${_pkgver}-${_patchlevel}.patch")
+md5sums=('91d51c41fcf2799e4ee7a7126fc95c17'
+         'eef835f97bc26ea20b0232bd913acdd8')
+
+jumbo_install() {
+  cd "${srcdir}"
+  xz -c -d "${pkgname}-${_pkgver}.tar.xz" | tar -x
+
+  cd "${srcdir}/${pkgname}-${_pkgver}"
+  patch -Np1 -Z -i "${srcdir}/${pkgname}-${_pkgver}-${_patchlevel}.patch"
+
+  ./configure --prefix="${JUMBO_ROOT}" \
+    --enable-thread-safe \
+    --enable-shared
+  make
+  make DESTDIR="${pkgdir}" install
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

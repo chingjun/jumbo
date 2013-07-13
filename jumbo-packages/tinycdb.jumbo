@@ -1,0 +1,24 @@
+pkgname=tinycdb
+pkgver=0.78
+pkgrel=1
+pkgdesc="Very fast and simple package for creating and reading constant data bases"
+depends=() # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tar.gz")
+md5sums=('976266afc3f6e7e17492a8d18f21f8f6')
+
+jumbo_install() {
+  cd "${srcdir}/${pkgname}-${pkgver}"
+
+  make sharedlib staticlib cdb
+
+  install -D -m 0644 cdb.h "${pkgdir}/${JUMBO_ROOT}/include/cdb.h"
+  install -D -m 0644 cdb.3 "${pkgdir}/${JUMBO_ROOT}/share/man/man3/cdb.3"
+  install -D -m 0644 cdb.1 "${pkgdir}/${JUMBO_ROOT}/share/man/man1/cdb.1"
+  install -D -m 0644 cdb.5 "${pkgdir}/${JUMBO_ROOT}/share/man/man5/cdb.5"
+  install -D -m 0755 cdb "${pkgdir}/${JUMBO_ROOT}/bin/cdb"
+  install -D -m 0644 libcdb.a "${pkgdir}/${JUMBO_ROOT}/lib/libcdb.a"
+  install -D -m 0644 libcdb.so "${pkgdir}/${JUMBO_ROOT}/lib/libcdb.so"
+  install -D -m 0644 libcdb.so.1 "${pkgdir}/${JUMBO_ROOT}/lib/libcdb.so.1"
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

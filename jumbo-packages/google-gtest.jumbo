@@ -1,0 +1,36 @@
+pkgname=google-gtest
+pkgver=1.6.0
+pkgrel=1
+pkgdesc="Google Test - C++ testing utility based on the xUnit framework (like JUnit)"
+depends=('python' 'cmake' 'unzip') # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/gtest-${pkgver}.zip")
+md5sums=('4577b49f2973c90bf9ba69aa8166b786')
+
+jumbo_install() {
+  cd "${srcdir}"
+  unzip "gtest-${pkgver}.zip"
+
+  cd "${srcdir}/gtest-${pkgver}"
+  (
+    rm -rf build
+    mkdir build
+    cd build
+    cmake .. && make
+  )
+  (
+    rm -rf build-so
+    mkdir build-so
+    cd build-so
+    cmake .. -DBUILD_SHARED_LIBS=ON && make
+  )
+
+  mkdir -pm 0755 ${pkgdir}/${JUMBO_ROOT}/{lib,include/gtest/internal,src/gtest/src}
+  install -m 0644 build/libgtest{,_main}.a ${pkgdir}/${JUMBO_ROOT}/lib/
+  install -m 0644 build-so/libgtest{,_main}.so ${pkgdir}/${JUMBO_ROOT}/lib/
+  install -m 0644 include/gtest/*.h ${pkgdir}/${JUMBO_ROOT}/include/gtest/
+  install -m 0644 include/gtest/internal/*.h ${pkgdir}/${JUMBO_ROOT}/include/gtest/internal/
+  install -m 0644 ${srcdir}/gtest-${pkgver}/fused-src/gtest/* ${pkgdir}/${JUMBO_ROOT}/src/gtest/src/
+  install -m 0644 ${srcdir}/gtest-${pkgver}/CMakeLists.txt ${pkgdir}/${JUMBO_ROOT}/src/gtest/
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

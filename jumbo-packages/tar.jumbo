@@ -1,0 +1,20 @@
+pkgname=tar
+pkgver=1.26
+pkgrel=1
+pkgdesc="Utility used to store, backup, and transport files"
+depends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tar.bz2"
+         "${JUMBO_REPO}/packages/${pkgname}/tar.1")
+md5sums=('2cee42a2ff4f1cd4f9298eeeb2264519'
+         'e97e7343f4e23724b4c48bca2f033e38')
+
+jumbo_install() {
+  cd "${srcdir}/${pkgname}-${pkgver}"
+
+  ./configure --prefix="${JUMBO_ROOT}" --libexecdir="${JUMBO_ROOT}/lib/tar"
+  make
+  make DESTDIR="${pkgdir}" install
+  install -Dm644 "${srcdir}/tar.1" "${pkgdir}/${JUMBO_ROOT}/share/man/man1/tar.1"
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

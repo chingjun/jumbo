@@ -1,0 +1,21 @@
+pkgname=apache-maven
+pkgver=2.2.1
+pkgrel=1
+pkgdesc="Project Management and Comprehension Tool for Java"
+backups=('opt/maven/conf/settings.xml')
+depends=('sun-java6')
+sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}-bin.tar.gz")
+md5sums=('3f829ed854cbacdaca8f809e4954c916')
+
+jumbo_install() {
+  cd "${srcdir}/${pkgname}-${pkgver}"
+  mkdir -p "${pkgdir}/${JUMBO_ROOT}/"{bin,opt/maven}
+
+  rm -v bin/*.bat
+  cp -av * \
+    "${pkgdir}/${JUMBO_ROOT}"/opt/maven
+  cd "${pkgdir}/${JUMBO_ROOT}"/bin
+  ln -s ../opt/maven/bin/mvn "${pkgdir}/${JUMBO_ROOT}"/bin/mvn
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

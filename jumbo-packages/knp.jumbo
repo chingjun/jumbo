@@ -1,0 +1,17 @@
+pkgname=knp
+pkgver=4.01
+pkgrel=1
+pkgdesc="Japanese Dependency and Case Structure Analyzer"
+depends=('juman' 'tinycdb' 'crfpp') # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tar.bz2")
+md5sums=('a4964bd8f698f0a347298a777791b800')
+
+jumbo_install() {
+  cd "${srcdir}/${pkgname}-${pkgver}"
+
+  ./configure --prefix="${JUMBO_ROOT}" --with-juman-prefix="${JUMBO_ROOT}" --with-crf
+  make
+  make DESTDIR="${pkgdir}" install
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

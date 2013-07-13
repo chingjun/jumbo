@@ -1,0 +1,20 @@
+pkgname=neon
+pkgver=0.29.6
+pkgrel=4
+pkgdesc="HTTP and WebDAV client library with a C interface"
+depends=('expat' 'openssl') # missdepends=('krb5' 'ca-certificates')
+sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tar.gz")
+md5sums=('591e0c82e6979e7e615211b386b8f6bc')
+
+jumbo_install() {
+  cd "${srcdir}/${pkgname}-${pkgver}"
+
+  ./configure --prefix="${JUMBO_ROOT}" \
+    --enable-shared \
+    --disable-static \
+    --with-ssl=openssl
+  make
+  make DESTDIR="${pkgdir}" install
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

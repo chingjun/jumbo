@@ -1,0 +1,17 @@
+pkgname=juman
+pkgver=7.0
+pkgrel=1
+pkgdesc="a User-Extensible Morphological Analyzer for Japanese"
+depends=() # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tar.bz2")
+md5sums=('d7344cd04b8ce22854068a5ad26a02cd')
+
+jumbo_install() {
+  cd "${srcdir}/${pkgname}-${pkgver}"
+
+  ./configure --prefix="${JUMBO_ROOT}"
+  make
+  make DESTDIR="${pkgdir}" install
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

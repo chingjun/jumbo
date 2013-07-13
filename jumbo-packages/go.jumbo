@@ -1,0 +1,84 @@
+pkgname=go
+pkgver=1.0.2
+pkgrel=2
+pkgdesc='Google Go compiler and tools'
+depends=('perl' 'gcc46') # missdepends=('gawk' 'inetutils')
+sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}${pkgver}.src.tar.gz"
+         "${JUMBO_REPO}/packages/${pkgname}/${pkgname}.profile")
+md5sums=('214936598fcfbd4bba61ea13f542077e'
+         '764161fda02e35e08afa88768d55a687')
+
+jumbo_install() {
+  cd "${srcdir}/${pkgname}"
+
+  export PATH="${JUMBO_ROOT}/opt/gcc46/bin:${PATH}"
+
+  export GOROOT_FINAL="${JUMBO_ROOT}/lib/go"
+  cd src
+  bash make.bash
+
+  cd "${srcdir}/${pkgname}"
+
+  export GOROOT="${srcdir}/${pkgname}"
+
+  install -Dm644 misc/bash/go \
+    "${pkgdir}/${JUMBO_ROOT}/share/bash-completion/completions/go"
+  install -Dm644 misc/emacs/go-mode-load.el \
+    "${pkgdir}/${JUMBO_ROOT}/share/emacs/site-lisp/go-mode-load.el"
+  install -Dm644 misc/emacs/go-mode.el \
+    "${pkgdir}/${JUMBO_ROOT}/share/emacs/site-lisp/go-mode.el"
+  install -Dm644 misc/zsh/go \
+    "${pkgdir}/${JUMBO_ROOT}/share/zsh/site-functions/_go"
+
+  for f in ftdetect/gofiletype.vim autoload/go/complete.vim indent/go.vim \
+    ftplugin/go/fmt.vim ftplugin/go/godoc.vim ftplugin/go/import.vim \
+    syntax/go.vim syntax/godoc.vim plugin/godoc.vim;
+  do
+    install -Dm644 "misc/vim/$f" "${pkgdir}/${JUMBO_ROOT}/share/vim/vimfiles/$f"
+  done
+
+  mkdir -p "${pkgdir}/${JUMBO_ROOT}/"{etc/bashrc.d,share/go,lib/go,lib/go/src}
+
+  cp -r doc misc --target-directory="${pkgdir}/${JUMBO_ROOT}/share/go"
+  ln -s "${JUMBO_ROOT}/share/go/doc" "${pkgdir}/${JUMBO_ROOT}/lib/go/doc"
+  cp -r --preserve=timestamps bin "${pkgdir}/${JUMBO_ROOT}"
+  cp -r --preserve=timestamps pkg "${pkgdir}/${JUMBO_ROOT}/lib/go"
+  cp -r --preserve=timestamps ${GOROOT}/src/pkg "${pkgdir}/${JUMBO_ROOT}/lib/go/src/"
+  cp -r --preserve=timestamps ${GOROOT}/src/cmd "${pkgdir}/${JUMBO_ROOT}/lib/go/src/cmd"
+  cp -r --preserve=timestamps ${GOROOT}/src/lib9 "${pkgdir}/${JUMBO_ROOT}/lib/go/src/"
+  cp -r --preserve=timestamps ${GOROOT}/lib "${pkgdir}/${JUMBO_ROOT}/lib/go/"
+
+  for f in src/Make.*;
+  do
+    install -Dm644 "$f" "${pkgdir}/${JUMBO_ROOT}/lib/go/src/$f"
+  done
+
+  # Remove object files from target src dir
+  find "${pkgdir}/${JUMBO_ROOT}/lib/go/src/" -type f -name '*.[ao]' -print0 | xargs -0 rm -f
+  #find "${pkgdir}/${JUMBO_ROOT}/lib/go/src/pkg" -type f -executable -print0 | xargs -0 rm -f
+
+  # Headers for C modules
+  install -Dm644 src/pkg/runtime/runtime.h \
+    "${pkgdir}/${JUMBO_ROOT}/lib/go/src/pkg/runtime/runtime.h"
+  install -Dm644 src/pkg/runtime/cgocall.h \
+    "${pkgdir}/${JUMBO_ROOT}/lib/go/src/pkg/runtime/cgocall.h"
+
+  # For packages that source /etc/bashrc.d/go.sh
+  install -Dm755 "${srcdir}/${pkgname}.profile" "${pkgdir}/${JUMBO_ROOT}/etc/bashrc.d/${pkgname}.sh"
+
+  # This is to make go get code.google.com/p/go-tour/gotour and
+  # then running the gotour executable work out of the box.
+  #
+  # Also, /usr/bin is the place for system-wide executables,
+  # not /usr/lib/go/bin. Users should use different paths by
+  # setting the appropriate environment variables.
+  #
+  ln -sf "${JUMBO_ROOT}/bin" "${pkgdir}/${JUMBO_ROOT}/lib/go/bin"
+
+  # For godoc
+  install -Dm644 favicon.ico "${pkgdir}/${JUMBO_ROOT}/lib/go/favicon.ico"
+
+  rm -f "${pkgdir}/${JUMBO_ROOT}/share/go/doc/articles/wiki/get.bin"
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

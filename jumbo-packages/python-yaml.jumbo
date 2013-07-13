@@ -1,0 +1,15 @@
+pkgname=python-yaml
+pkgver=3.10
+pkgrel=1
+pkgdesc="Python bindings for YAML, using fast libYAML library"
+depends=('python' 'libyaml') # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/PyYAML-${pkgver}.tar.gz")
+md5sums=('74c94a383886519e9e7b3dd1ee540247')
+
+jumbo_install() {
+  cd "${srcdir}/PyYAML-${pkgver}"
+
+  python setup.py install --prefix=${JUMBO_ROOT} --root=${pkgdir}
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

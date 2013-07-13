@@ -1,0 +1,40 @@
+pkgname=tcl
+pkgver=8.6.0
+pkgrel=1
+pkgdesc="The Tcl scripting language"
+depends=() # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/tcl${pkgver}-src.tar.gz")
+md5sums=('573aa5fe678e9185ef2b3c56b24658d3')
+
+jumbo_install() {
+  # For compile use
+  mkdir -p "${pkgdir}/${JUMBO_ROOT}/src"
+  cp -a -r "${srcdir}/tcl${pkgver}" "${pkgdir}/${JUMBO_ROOT}/src/"
+
+  cd "${srcdir}/tcl${pkgver}"
+
+  # Remove visibility optimization
+  for name in $(find . -name 'configure'); do
+    sed -i 's|#define MODULE_SCOPE extern __attribute__((__visibility__(\\\?"hidden\\\?")))|#define MODULE_SCOPE extern|' ${name}
+  done
+
+  cd "${srcdir}/tcl${pkgver}/unix"
+
+  # Don't let tcl find the previous version of hedaer files in jumbo
+  unset CPPFLAGS
+  unset CFLAGS
+  unset CXXFLAGS
+  unset LDFLAGS
+
+  ./configure --prefix="${JUMBO_ROOT}" \
+    --mandir="${JUMBO_ROOT}/share/man" \
+    --enable-threads --enable-64bit --enable-shared
+  make
+  make INSTALL_ROOT="${pkgdir}" install install-private-headers
+  ln -sf tclsh8.6 "${pkgdir}/${JUMBO_ROOT}/bin/tclsh"
+
+  # remove buildroot traces
+  sed -i "s#${srcdir}#${JUMBO_ROOT}/src#" "${pkgdir}/${JUMBO_ROOT}"/lib/{tcl,tdbc1.0.0/tdbc,itcl4.0.0/itcl}Config.sh
+}
+
+# vim:set ft=sh ts=2 sw=2 et:

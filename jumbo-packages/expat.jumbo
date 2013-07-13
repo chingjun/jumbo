@@ -1,0 +1,16 @@
+pkgname=expat
+pkgver=2.1.0
+pkgrel=2
+pkgdesc="An XML parser library"
+sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tar.gz")
+md5sums=('dd7dab7a5fea97d2a6a43f511449b7cd')
+
+jumbo_install() {
+  cd "${srcdir}/${pkgname}-${pkgver}"
+
+  ./configure --prefix="${JUMBO_ROOT}" --mandir="${JUMBO_ROOT}/share/man"
+  make
+  make DESTDIR="${pkgdir}" install
+}
+
+# vim:set ft=sh ts=2 sw=2 et:
