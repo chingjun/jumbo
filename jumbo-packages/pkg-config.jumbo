@@ -1,6 +1,6 @@
 pkgname=pkg-config
 pkgver=0.28
-pkgrel=1
+pkgrel=2
 pkgdesc="A system for managing library compile/link flags"
 depends=() # missdepends=('glib2')
 sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tar.gz"
@@ -15,6 +15,9 @@ jumbo_install() {
   ./configure --prefix="${JUMBO_ROOT}" --with-internal-glib
   make
   make DESTDIR="${pkgdir}" install
+  
+  # touch pkg-config libdir
+  mkdir -p "${pkgdir}/${JUMBO_ROOT}/lib/pkgconfig"
 }
 
 # vim:set ft=sh ts=2 sw=2 et:

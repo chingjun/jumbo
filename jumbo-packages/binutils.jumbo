@@ -1,63 +1,39 @@
 pkgname=binutils
-pkgver=2.23.1
+pkgver=2.24
 pkgrel=1
 pkgdesc="A set of programs to assemble and manipulate binary and object files"
 depends=('zlib') # missdepends=()
-sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tar.bz2")
-md5sums=('33adb18c3048d057ac58d07a3f1adb38')
+# optdepends=()
+arch2jam=1
+sources=("${JUMBO_REPO}/packages/${pkgname}/binutils-2.24.tar.bz2"
+         "${JUMBO_REPO}/packages/${pkgname}/binutils-2.24-powerpc.patch"
+         "${JUMBO_REPO}/packages/${pkgname}/binutils-2.24-disable-gold-testsuite.patch")
+md5sums=('e0f71a7b2ddab0f8612336ac81d9636b'
+         '0055f576cb0dac3f93148dcf6a3c0baf'
+         'd609b92f71053848cbbc3570df3be13c')
 
 jumbo_install() {
-  cd "${srcdir}"
-  mkdir binutils-build && cd binutils-build
-
-  ${srcdir}/binutils-${pkgver}/configure --prefix="${JUMBO_ROOT}/opt/binutils" \
-    --with-lib-path="${JUMBO_ROOT}/lib:/usr/lib64:/lib64" \
-    --enable-plugins --enable-threads --enable-shared \
-    --enable-ld=default --enable-gold \
+  cd "${srcdir}/binutils-${pkgver}"
+  patch -p1 < "${srcdir}/binutils-2.24-powerpc.patch"
+  patch -p1 < "${srcdir}/binutils-2.24-disable-gold-testsuite.patch"
+  mkdir -p "${srcdir}/binutils-build"
+  cd "${srcdir}/binutils-build"
+  "${srcdir}/binutils-${pkgver}/configure" --prefix="${JUMBO_ROOT}/opt/binutils" \
+    --with-lib-path="${JUMBO_ROOT}/opt/binutils/lib:/usr/lib64:/lib64" \
+    --enable-threads --enable-shared \
+    --enable-ld=default --enable-plugins \
     --disable-werror --disable-multilib
-  
+# --enable-gold
   # check the host environment and makes sure all the necessary tools are available
   make configure-host
-
-  make tooldir="${pkgdir}/${JUMBO_ROOT}/opt/binutils"
-
-  # Rebuild libiberty.a with -fPIC
-  cp -a libiberty libiberty-pic
-  make -C libiberty-pic clean
-  make CFLAGS="$CFLAGS -fPIC" -C libiberty-pic
-
-  # Rebuild libbfd.a with -fPIC
-  # hidden visability prevent 3rd party shared libraries exporting bfd non-stable API
-  cp -a bfd bfd-pic
-  make -C bfd-pic clean
-  make CFLAGS="$CFLAGS -fPIC -fvisibility=hidden" -C bfd-pic
-
-  # Rebuild libopcodes.a with -fPIC
-  cp -a opcodes opcodes-pic
-  make -C opcodes-pic clean 
-  make CFLAGS="$CFLAGS -fPIC" -C opcodes-pic
-
-  make install \
-    prefix="${pkgdir}/${JUMBO_ROOT}/opt/binutils" \
-    tooldir="${pkgdir}/${JUMBO_ROOT}/opt/binutils"
-  
-  # Add some useful headers
-  install -m644 "${srcdir}/binutils-${pkgver}/include/libiberty.h" "${pkgdir}/${JUMBO_ROOT}/opt/binutils/include"
-  install -m644 "${srcdir}/binutils-${pkgver}/include/demangle.h" "${pkgdir}/${JUMBO_ROOT}/opt/binutils/include"
-
-  # install libraries rebuilt with -fPIC
-  install -m644 libiberty-pic/libiberty.a "${pkgdir}/${JUMBO_ROOT}/opt/binutils/lib"
-  install -m644 bfd-pic/libbfd.a "${pkgdir}/${JUMBO_ROOT}/opt/binutils/lib"
-  install -m644 opcodes/libopcodes.a "${pkgdir}/${JUMBO_ROOT}/opt/binutils/lib"
-
-  # Remove Windows/Novell specific man pages
-  rm -f ${pkgdir}/${JUMBO_ROOT}/opt/binutils/share/man/man1/{dlltool,nlmconv,windres,windmc}*
-
-  # Remove these symlinks, they are not ABI stable.
-  # Programs should compile static to the .a file.
-  rm -f ${pkgdir}/${JUMBO_ROOT}/opt/binutils/lib/lib{bfd,opcodes}.so
-  echo "INPUT ( /${JUMBO_ROOT}/opt/binutils/lib/libbfd.a -liberty -lz )" >${pkgdir}/${JUMBO_ROOT}/opt/binutils/lib/libbfd.so
-  echo "INPUT ( /${JUMBO_ROOT}/opt/binutils/lib/libopcodes.a -lbfd )" >${pkgdir}/${JUMBO_ROOT}/opt/binutils/lib/libopcodes.so
+  make tooldir="${JUMBO_ROOT}/opt/binutils"
+  cd "${srcdir}/binutils-build"
+  make prefix="${pkgdir}/${JUMBO_ROOT}/opt/binutils" tooldir="${pkgdir}/${JUMBO_ROOT}/opt/binutils" install
+  # Remove unwanted files
+  rm "${pkgdir}/${JUMBO_ROOT}/opt/binutils"/share/man/man1/{dlltool,nlmconv,windres,windmc}*
+  rm "${pkgdir}/${JUMBO_ROOT}/opt/binutils"/share/info/{configure,standards}.info
+  # No shared linking to these files outside binutils
+  rm "${pkgdir}/${JUMBO_ROOT}/opt/binutils"/lib/lib{bfd,opcodes}.so
 }
 
 jumbo_post_install() {

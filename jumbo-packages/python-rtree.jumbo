@@ -2,7 +2,7 @@ pkgname=python-rtree
 pkgver=0.7.0
 pkgrel=1
 pkgdesc="R-Tree spatial index for Python GIS"
-depends=('python' 'python-distribute' 'libspatialindex') # missdepends=()
+depends=('python' 'python-setuptools' 'libspatialindex') # missdepends=()
 sources=("${JUMBO_REPO}/packages/${pkgname}/Rtree-${pkgver}.tar.gz")
 md5sums=('84e75e5a9fdf7bd092435588be9084ac')
 

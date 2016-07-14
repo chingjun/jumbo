@@ -2,7 +2,7 @@ pkgname=python-crypto
 pkgver=2.6
 pkgrel=1
 pkgdesc="Collection of cryptographic algorithms and protocols"
-depends=("python") # missdepends=()
+depends=("python" "python-setuptools") # missdepends=()
 sources=("${JUMBO_REPO}/packages/${pkgname}/pycrypto-${pkgver}.tar.gz")
 md5sums=("88dad0a270d1fe83a39e0467a66a22bb")
 

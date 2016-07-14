@@ -1,14 +1,17 @@
 pkgname=multitail
-pkgver=5.2.12
+pkgver=6.0
 pkgrel=1
 pkgdesc="Lets you view one or multiple files like the original tail program"
-depends=('ncurses')
+depends=('ncurses') # missdepends=()
 backups=('etc/multitail.conf')
-sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tgz")
-md5sums=('15fc4a54778327192b0b5f1c0005a1b3')
+# optdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}_${pkgver}.orig.tar.gz")
+md5sums=("fb8efc547d389257021885fe5402255c")
 
 jumbo_install() {
   cd "${srcdir}/${pkgname}-${pkgver}"
+  sed -i 's|ncursesw/panel.h|panel.h|' mt.h
+  sed -i 's|ncursesw/ncurses.h|ncurses.h|' mt.h
   make DESTDIR="${JUMBO_ROOT}"
 
   install -D -m 755 multitail "${pkgdir}/${JUMBO_ROOT}/bin/multitail"
@@ -16,4 +19,4 @@ jumbo_install() {
   install -D -m 644 multitail.conf "${pkgdir}/${JUMBO_ROOT}/etc/multitail.conf"
 }
 
-# vim: ts=2 sw=2 et ft=sh
+# vim:set ft=sh ts=2 sw=2 et:

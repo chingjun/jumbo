@@ -3,7 +3,7 @@ _realname=Pygments
 pkgver=1.6
 pkgrel=1
 pkgdesc="Python syntax highlighter"
-depends=("python-distribute") # missdepends=()
+depends=("python-setuptools") # missdepends=()
 sources=("${JUMBO_REPO}/packages/${pkgname}/${_realname}-${pkgver}.tar.gz")
 md5sums=('a18feedf6ffd0b0cc8c8b0fbdb2027b1')
 

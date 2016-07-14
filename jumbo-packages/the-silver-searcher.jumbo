@@ -1,10 +1,10 @@
 pkgname=the-silver-searcher
-pkgver=0.13.1
+pkgver=0.32.0
 pkgrel=1
 pkgdesc="A code-searching tool ag which is similar to ack, but faster."
-depends=(pcre) # missdepends=()
+depends=('pcre' 'xz' 'pkg-config') # missdepends=()
 sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname//-/_}-${pkgver}.tar.gz")
-md5sums=("12cd2cd3035c5c25d92fb4cc79d300ae")
+md5sums=("3fdfd5836924246073d5344257a06823")
 
 jumbo_install() {
   cd "${srcdir}/${pkgname//-/_}-${pkgver}"

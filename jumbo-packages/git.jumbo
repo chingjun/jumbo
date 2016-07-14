@@ -1,39 +1,51 @@
 pkgname=git
-pkgver=1.8.1.4
+pkgver=2.1.2
 pkgrel=1
 pkgdesc="the fast distributed version control system"
-depends=('curl' 'expat' 'perl-error' 'perl' 'openssl' 'pcre'
-         'python'
-         'perl-libwww' 'perl-term-readkey') # missdepends=()
-sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tar.gz"
-         "${JUMBO_REPO}/packages/${pkgname}/${pkgname}-manpages-${pkgver}.tar.gz")
-md5sums=('60f32ef4a6b3fa2143b81a28704333ed'
-         '61d19a9d386c686ee06b493a9df6e61c')
+depends=('curl' 'expat' 'perl-error' 'perl' 'openssl' 'pcre' 'xz' 'python' 'perl-libwww' 'perl-term-readkey') # missdepends=()
+# optdepends=('tk' 'perl-libwww' 'perl-term-readkey' 'perl-mime-tools' 'perl-net-smtp-ssl' 'perl-authen-sasl' 'python2' 'subversion' 'cvsps2' 'gnome-keyring')
+arch2jam=1
+sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tar.xz"
+         "${JUMBO_REPO}/packages/${pkgname}/${pkgname}-manpages-${pkgver}.tar.xz")
+md5sums=('35dc1585dc522fd715f117744b1f5992'
+         '78180cc44f08c3c2c92775e787b695fe')
 
 jumbo_install() {
-  cd "${srcdir}/${pkgname}-${pkgver}"
-
+  cd ${srcdir}
+  xz -c -d "git-2.1.2.tar.xz" | tar -x
+  xz -c -d "git-manpages-2.1.2.tar.xz" | tar -x
+  cd "${srcdir}/$pkgname-$pkgver"
   export PERL_PATH="${JUMBO_ROOT}/bin/perl"
   export PYTHON_PATH="${JUMBO_ROOT}/bin/python"
-
-  ./configure --prefix="${JUMBO_ROOT}" \
-    --libexecdir="${JUMBO_ROOT}/lib" \
-    --with-libpcre \
-    --with-gitconfig="${JUMBO_ROOT}/etc/gitconfig" \
-    --with-gitattributes="${JUMBO_ROOT}/etc/gitattributes"
-  make NO_CROSS_DIRECTORY_HARDLINKS=1
-  make NO_CROSS_DIRECTORY_HARDLINKS=1 NO_PERL=1 DESTDIR="${pkgdir}" install
+  make prefix=${JUMBO_ROOT} gitexecdir=${JUMBO_ROOT}/lib/git-core \
+    CFLAGS="$CFLAGS" LDFLAGS="$LDFLAGS" \
+    USE_LIBPCRE=1 \
+    NO_CROSS_DIRECTORY_HARDLINKS=1 \
+    ETC_GITCONFIG=${JUMBO_ROOT}/etc/gitconfig \
+    ETC_GITATTRIBUTES=${JUMBO_ROOT}/etc/gitattributes \
+    MAN_BOLD_LITERAL=1 \
+    all
+  make -C contrib/subtree prefix=${JUMBO_ROOT} gitexecdir=${JUMBO_ROOT}/lib/git-core all
+  make prefix=${JUMBO_ROOT} gitexecdir=${JUMBO_ROOT}/lib/git-core \
+    CFLAGS="$CFLAGS" LDFLAGS="$LDFLAGS" \
+    USE_LIBPCRE=1 \
+    NO_CROSS_DIRECTORY_HARDLINKS=1 \
+    ETC_GITCONFIG=${JUMBO_ROOT}/etc/gitconfig \
+    ETC_GITATTRIBUTES=${JUMBO_ROOT}/etc/gitattributes \
+    MAN_BOLD_LITERAL=1 \
+    INSTALLDIRS=vendor NO_PERL=1 DESTDIR="${pkgdir}" install
   (cd perl; perl Makefile.PL INSTALLDIRS=vendor; make; make DESTDIR="${pkgdir}" install)
 
   # bash completion
-  mkdir -p "${pkgdir}/${JUMBO_ROOT}/share/bash-completion/completions/"
-  install -m644 ./contrib/completion/git-completion.bash "${pkgdir}/${JUMBO_ROOT}/share/bash-completion/completions/git"
+  mkdir -p "${pkgdir}"${JUMBO_ROOT}/share/bash-completion/completions/
+  install -m644 ./contrib/completion/git-completion.bash "${pkgdir}"${JUMBO_ROOT}/share/bash-completion/completions/git
   # fancy git prompt
-  mkdir -p "${pkgdir}/${JUMBO_ROOT}/share/git/"
-  install -m644 ./contrib/completion/git-prompt.sh "${pkgdir}/${JUMBO_ROOT}/share/git/git-prompt.sh"
-  # more contrib stuff
-  cp -a ./contrib "${pkgdir}/${JUMBO_ROOT}/share/git/"
-
+  mkdir -p "${pkgdir}"${JUMBO_ROOT}/share/git/
+  install -m644 ./contrib/completion/git-prompt.sh "${pkgdir}"${JUMBO_ROOT}/share/git/git-prompt.sh
+  # subtree installation
+  make -C contrib/subtree prefix=${JUMBO_ROOT} gitexecdir=${JUMBO_ROOT}/lib/git-core DESTDIR="${pkgdir}" install
+  # the rest of the contrib stuff
+  cp -a ./contrib/* ${pkgdir}${JUMBO_ROOT}/share/git/
   # how 'bout some manpages?
   for mansect in man1 man5 man7; do
     for manpage in "${srcdir}/${mansect}"/*; do

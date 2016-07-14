@@ -3,7 +3,7 @@ _realname=Flask-WTF
 pkgver=0.8
 pkgrel=1
 pkgdesc="Simple integration of Flask and WTForms, including CSRF, file upload and Recaptcha integration."
-depends=('python' 'python-flask' 'python-wtforms') # missdepends=()
+depends=('python' 'python-setuptools' 'python-flask' 'python-wtforms') # missdepends=()
 sources=("${JUMBO_REPO}/packages/${pkgname}/${_realname}-${pkgver}.tar.gz")
 md5sums=("33e640c1a18881b7a05f9c007378683e")
 

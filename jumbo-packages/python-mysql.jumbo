@@ -2,7 +2,7 @@ pkgname=python-mysql
 pkgver=1.2.3
 pkgrel=1
 pkgdesc="MySQL support for Python"
-depends=('libmysqlclient' 'python' 'python-distribute') # missdepends=()
+depends=('libmysqlclient' 'python' 'python-setuptools') # missdepends=()
 sources=("${JUMBO_REPO}/packages/${pkgname}/MySQL-python-${pkgver}.tar.gz")
 md5sums=('215eddb6d853f6f4be5b4afc4154292f')
 

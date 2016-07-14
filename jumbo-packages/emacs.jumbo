@@ -1,6 +1,6 @@
 pkgname=emacs
 pkgver=24.2
-pkgrel=1
+pkgrel=2
 pkgdesc="The extensible, customizable, self-documenting real-time display editor"
 depends=() # missdepends=('librsvg' 'gpm' 'giflib' 'libxpm' 'gtk2' 'hicolor-icon-theme' 'gconf' 'desktop-file-utils' 'alsa-lib' 'imagemagick')
 sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tar.bz2")
@@ -12,7 +12,8 @@ jumbo_install() {
   ./configure --prefix="${JUMBO_ROOT}" \
     --sysconfdir="${JUMBO_ROOT}/etc" \
     --libexecdir="${JUMBO_ROOT}/lib" \
-    --localstatedir="${JUMBO_ROOT}/var"
+    --localstatedir="${JUMBO_ROOT}/var" \
+    --with-x-toolkit=no --with-xpm=no --with-jpeg=no --with-gif=no --with-tiff=no
   make
   make DESTDIR="${pkgdir}" install
 

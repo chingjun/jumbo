@@ -1,15 +1,35 @@
 pkgname=python-distribute
-pkgver=0.6.34
+pkgver=0.6.45
 pkgrel=1
 pkgdesc="Easily build and distribute Python packages"
 depends=('python') # missdepends=()
 sources=("${JUMBO_REPO}/packages/${pkgname}/distribute-${pkgver}.tar.gz")
-md5sums=('4576ab843a6db5100fb22a72deadf56d')
+md5sums=('8953f2c07e6700dabf2ec150129b8c31')
+
+jumbo_pre_install() {
+  if [ -n "$(jumbo list-files python-setuptools 2>/dev/null)" ]
+  then
+    # python-setuptools installed
+    cat <<"EOF"
+    >>
+    >> python-distribute has been marked as disabled and being replaced by python-setuptools
+    >> Archlinux announcement:
+    >> https://www.archlinux.org/todo/replacement-of-distribute-dependency-in-favour-of-setuptools/
+    >> Please try jumbo install python-setuptools instead
+    >>
+EOF
+    exit 1
+  fi
+}
+
+jumbo_pre_update() {
+  jumbo_pre_install
+}
 
 jumbo_install() {
-   cd "${srcdir}/distribute-${pkgver}"
+  cd "${srcdir}/distribute-${pkgver}"
 
-   python setup.py install --root="${pkgdir}" --optimize=1
+  python setup.py install --root="${pkgdir}" --optimize=1
 }
 
 # vim:set ft=sh ts=2 sw=2 et:

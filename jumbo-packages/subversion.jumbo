@@ -1,13 +1,13 @@
 pkgname=subversion
-pkgver=1.6.17
-pkgrel=3
+pkgver=1.6.23
+pkgrel=1
 pkgdesc="A Modern Concurrent Version Control System (aka SVN)"
 depends=('perl' 'neon' 'apr-util' 'sqlite3' 'swig' 'python') # missdepends=('db' 'file')
 sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tar.bz2"
          "${JUMBO_REPO}/packages/${pkgname}/subversion.rpath.fix.patch"
          "${JUMBO_REPO}/packages/${pkgname}/subversion.suppress.deprecation.warnings.patch"
          "${JUMBO_REPO}/packages/${pkgname}/subversion-perl-bindings.patch")
-md5sums=('81e5dc5beee4b3fc025ac70c0b6caa14'
+md5sums=('5d621281ce9d3448e1437cb006331f57'
          '6b4340ba9d8845cd8497e013ae01be3f'
          '1166f3b7413d7e7450299b3525680bbe'
          '0591aa39837931161b4d61ff35c7b147')
@@ -25,6 +25,8 @@ jumbo_install() {
 
   autoreconf
   ./configure --prefix="${JUMBO_ROOT}" \
+    --disable-neon-version-check \
+    --without-apxs \
     --with-apr="${JUMBO_ROOT}" \
     --with-apr-util="${JUMBO_ROOT}" \
     --with-neon="${JUMBO_ROOT}" \

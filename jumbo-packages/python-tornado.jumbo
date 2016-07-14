@@ -1,18 +1,15 @@
 pkgname=python-tornado
 _pkgname=tornado
-pkgver=3.0.1
+pkgver=3.2
 pkgrel=1
 pkgdesc="Tornado is a Python web framework and asynchronous networking library, originally developed at FriendFeed."
-depends=("python") # missdepends=()
+depends=("python" "python-backports.ssl_match_hostname" "python-setuptools") # missdepends=()
 sources=("${JUMBO_REPO}/packages/${pkgname}/${_pkgname}-${pkgver}.tar.gz")
-md5sums=("20423cb0c1ea7ee1e7a58983099969b2")
+md5sums=('bd83cee5f1a5c5e139e87996d00b251b')
 
 jumbo_install() {
-
   cd "${srcdir}/${_pkgname}-${pkgver}"
-
   python setup.py install --root="${pkgdir}" --optimize=1
-
 }
 
 # vim:set ft=sh ts=2 sw=2 et:

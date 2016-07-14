@@ -1,21 +1,21 @@
 pkgname=vim
-pkgver=7.3.798
+pkgver=7.4.884
 pkgrel=1
-_versiondir=vim73
+_versiondir=vim74
 pkgdesc='Vi Improved, a highly configurable, improved version of the vi text editor'
-depends=('xz' 'ncurses' 'python' 'perl') # missdepends=('ruby' 'lua' 'gpm')
-sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tar.xz"
+depends=('ncurses' 'python' 'perl' 'lua') # missdepends=('ruby' 'gpm')
+sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tar.gz"
          "${JUMBO_REPO}/packages/${pkgname}/pythoncomplete.vim"
          "${JUMBO_REPO}/packages/${pkgname}/archlinux.vim"
          "${JUMBO_REPO}/packages/${pkgname}/vimrc-v2")
-md5sums=('e4a759fdb7cf91d91fd4f8e4f44d5d9c'
+md5sums=('a8f205887008bf7716711b57401ca1f1'
          '6e7adfbd5d26c1d161030ec203a7f243'
          '10353a61aadc3f276692d0e17db1478e'
          '6aef60b424afe1052b580ece9f2e6653')
 
 jumbo_install() {
   cd "${srcdir}"
-  xz -c -d "${pkgname}-${pkgver}.tar.xz" | tar -x
+  tar xzf "${pkgname}-${pkgver}.tar.gz"
 
   cd "${srcdir}/${pkgname}-${pkgver}"
 
@@ -37,7 +37,8 @@ jumbo_install() {
     --enable-pythoninterp \
     --disable-python3interp \
     --disable-rubyinterp \
-    --disable-luainterp \
+    --enable-luainterp \
+    --with-lua-prefix=${JUMBO_ROOT} \
     --without-local-dir
 
   make
@@ -63,6 +64,22 @@ jumbo_install() {
   # rgb.txt file
   install -Dm644 "${srcdir}/${pkgname}-${pkgver}/runtime/rgb.txt" \
     "${pkgdir}/${JUMBO_ROOT}/share/vim/${_versiondir}/rgb.txt"
+
+}
+
+jumbo_post_install() {
+  cat <<"EOF"
+    >>
+    >> jumbo now shipping vim WITHOUT vundle support
+    >> you can install vundle separately with the following command: 
+    >>
+    >> $ jumbo install vim-vundle
+    >>
+EOF
+}
+
+jumbo_post_update() {
+  jumbo_post_install
 }
 
 # vim:set ft=sh ts=2 sw=2 et:

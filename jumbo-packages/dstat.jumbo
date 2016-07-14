@@ -1,6 +1,6 @@
 pkgname=dstat
 pkgver=0.7.2
-pkgrel=1
+pkgrel=2
 pkgdesc="A versatile resource statistics tool"
 depends=('python')
 sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tar.bz2")
@@ -8,6 +8,9 @@ md5sums=('bfea4dc8037a0b18fc40a4dfc104dcc8')
 
 jumbo_install() {
   cd "${srcdir}/${pkgname}-${pkgver}"
+
+  # append dstat share dir to dstat plugin search scope
+  sed -i "/\/usr\/share\/dstat/ a\\    '${JUMBO_ROOT}/share/dstat/'," dstat
 
   make prefix="${JUMBO_ROOT}" sysconfdir="${JUMBO_ROOT}/etc" DESTDIR="${pkgdir}" install
 

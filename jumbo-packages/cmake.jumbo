@@ -1,10 +1,10 @@
 pkgname=cmake
-pkgver=2.8.10.2
+pkgver=3.5.2
 pkgrel=1
 pkgdesc="A cross-platform open-source make system"
 depends=() # missdepends=('curl' 'libarchive' 'shared-mime-info')
 sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tar.gz")
-md5sums=('097278785da7182ec0aea8769d06860c')
+md5sums=('701386a1b5ec95f8d1075ecf96383e02')
 
 jumbo_install() {
   cd "${srcdir}/${pkgname}-${pkgver}"
@@ -23,9 +23,9 @@ jumbo_install() {
   make DESTDIR="${pkgdir}" install
 
   vimpath="${pkgdir}/${JUMBO_ROOT}/share/vim/vimfiles"
-  install -Dm644 Docs/cmake-indent.vim ${vimpath}/indent/cmake-indent.vim
-  install -Dm644 Docs/cmake-syntax.vim ${vimpath}/syntax/cmake-syntax.vim
-  install -Dm644 Docs/cmake-mode.el ${pkgdir}/${JUMBO_ROOT}/share/emacs/site-lisp/cmake-mode.el
+  install -Dm644 Auxiliary/cmake-indent.vim ${vimpath}/indent/cmake-indent.vim
+  install -Dm644 Auxiliary/cmake-syntax.vim ${vimpath}/syntax/cmake-syntax.vim
+  install -Dm644 Auxiliary/cmake-mode.el ${pkgdir}/${JUMBO_ROOT}/share/emacs/site-lisp/cmake-mode.el
 }
 
 # vim:set ft=sh ts=2 sw=2 et:

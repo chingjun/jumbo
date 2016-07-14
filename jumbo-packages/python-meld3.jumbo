@@ -3,7 +3,7 @@ _realname=meld3
 pkgver=0.6.10
 pkgrel=1
 pkgdesc="An HTML/XML templating engine"
-depends=('python')
+depends=('python' 'python-setuptools')
 sources=("${JUMBO_REPO}/packages/${pkgname}/${_realname}-${pkgver}.tar.gz")
 md5sums=('42e58624e9d427be7659d7a28e2b0b6f')
 

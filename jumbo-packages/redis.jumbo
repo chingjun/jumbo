@@ -14,6 +14,7 @@ jumbo_install() {
 
     make MALLOC=libc
     mkdir -p "${pkgdir}/${JUMBO_ROOT}/bin"
+    mkdir -p "${pkgdir}/${JUMBO_ROOT}/var/redis"
     make INSTALL_BIN="${pkgdir}/${JUMBO_ROOT}/bin" PREFIX="${JUMBO_ROOT}" install
 
     sed -i 's|pidfile /var/run/redis.pid|pidfile '"${JUMBO_ROOT}"'/var/run/redis.pid|;s|dir \./|dir '"${JUMBO_ROOT}"'/var/lib/redis/|;s|logfile stdout|logfile '"${JUMBO_ROOT}"'/var/log/redis.log| ' $srcdir/${pkgname}-${pkgver}/redis.conf

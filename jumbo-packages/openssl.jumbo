@@ -1,14 +1,14 @@
 pkgname=openssl
-_ver=1.0.1e
+_ver=1.0.2h
 # use a pacman compatible version scheme
 pkgver=${_ver/[a-z]/.${_ver//[0-9.]/}}
 #pkgver=$_ver
 pkgrel=1
 pkgdesc='The Open Source toolkit for Secure Sockets Layer and Transport Layer Security'
-depends=('perl') # missdepends=()
+depends=('perl' 'zlib') # missdepends=()
 backups=('etc/ssl/openssl.cnf')
 sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${_ver}.tar.gz")
-md5sums=('66bf6f10f060d561929de96f9dfe5b8c')
+md5sums=('9392e65072ce4b614c1392eefc1f23d0')
 
 jumbo_install() {
   cd "${srcdir}/${pkgname}-${_ver}"
@@ -16,12 +16,14 @@ jumbo_install() {
   # set ca dir to /etc/ssl by default
   #patch -p0 -i $srcdir/ca-dir.patch
 
+  # TODO: openssl-1.0.1g breaks on perl 5.18
+
   # mark stack as non-executable: http://bugs.archlinux.org/task/12434
   unset MAKEFLAGS
   ./Configure --prefix="${JUMBO_ROOT}" --openssldir="${JUMBO_ROOT}/etc/ssl" --libdir=lib \
     shared zlib enable-md2 \
     linux-x86_64 \
-    -Wa,--noexecstack ${CFLAGS} ${LDFLAGS}
+    -Wa,--noexecstack ${CPPFLAGS} ${CFLAGS} ${LDFLAGS}
     # enable-ec_nistp_64_gcc_128 : Disabled because of gcc internal error in RHEL5
 
   make depend

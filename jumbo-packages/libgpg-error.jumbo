@@ -1,10 +1,10 @@
 pkgname=libgpg-error
-pkgver=1.10
+pkgver=1.23
 pkgrel=1
 pkgdesc="Support library for libgcrypt"
 depends=() # missdepends=()
 sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tar.bz2")
-md5sums=('736a03daa9dc5873047d4eb4a9c22a16')
+md5sums=('5bc2d7ec28f91f883fb6f23d5c784ca7')
 
 jumbo_install() {
   cd "${srcdir}/${pkgname}-${pkgver}"
