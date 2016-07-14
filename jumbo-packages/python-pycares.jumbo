@@ -3,7 +3,7 @@ _pkgname=pycares
 pkgver=0.5.0
 pkgrel=1
 pkgdesc="Python interface for c-ares"
-depends=("python" "c-ares") # missdepends=()
+depends=("python" "python-setuptools" "c-ares") # missdepends=()
 sources=("${JUMBO_REPO}/packages/${pkgname}/${_pkgname}-${pkgver}.tar.gz"
          "${JUMBO_REPO}/packages/${pkgname}/pycares-0.5.0-use-system-cares.patch")
 md5sums=("32eb52c17a8fc2a65751db22e93b70a9"

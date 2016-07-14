@@ -1,17 +1,13 @@
 pkgname=curl
-pkgver=7.29.0
+pkgver=7.49.1
 pkgrel=1
 pkgdesc="An URL retrival utility and library"
 depends=('ca-certificates' 'libssh2' 'openssl' 'zlib') # missdepends=()
-sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tar.gz"
-         "${JUMBO_REPO}/packages/${pkgname}/0001-Fix-NULL-pointer-reference-when-closing-an-unused-mu.patch")
-md5sums=('4f57d3b4a3963038bd5e04dbff385390'
-         '5bfd1899e8b19cfdd78774f6337f8b47')
+sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tar.gz")
+md5sums=('2feb3767b958add6a177c6602ff21e8c')
 
 jumbo_install() {
   cd "${srcdir}/${pkgname}-${pkgver}"
-
-  patch -Np1 <"${srcdir}/0001-Fix-NULL-pointer-reference-when-closing-an-unused-mu.patch"
 
   ./configure \
       --prefix="${JUMBO_ROOT}" \

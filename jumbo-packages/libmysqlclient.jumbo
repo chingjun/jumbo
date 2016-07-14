@@ -1,11 +1,11 @@
 pkgname=libmysqlclient
 pkgbase=mysql
-pkgver=5.5.30
+pkgver=5.7.13
 pkgrel=1
 pkgdesc="MySQL client libraries"
-depends=('cmake' 'zlib' 'openssl') # missdepends = ()
-sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgbase}-${pkgver}.tar.gz")
-md5sums=('f0cdd56f89e781e800cf223bd9edd00c')
+depends=('ncurses' 'cmake' 'zlib' 'openssl' 'boost' 'jemalloc') # missdepends = ()
+sources=("${JUMBO_REPO}/packages/${pkgbase}/${pkgbase}-${pkgver}.tar.gz")
+md5sums=('8fab75dbcafcd1374d07796bff88ae00')
 
 jumbo_install() {
   cd "${srcdir}"
@@ -13,8 +13,12 @@ jumbo_install() {
   cd build
 
   # CFLAGS/CXXFLAGS as suggested upstream
-
-  cmake ../${pkgbase}-${pkgver} \
+  cmake "../${pkgbase}-${pkgver}" \
+    -DCMAKE_INSTALL_RPATH=${JUMBO_ROOT}/lib \
+    -DCMAKE_INSTALL_RPATH_USE_LINK_PATH=TRUE \
+    -DCMAKE_AR=/usr/bin/ar \
+    -DCMAKE_RANLIB=/usr/bin/ranlib \
+    -DBUILD_CONFIG=mysql_release \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_INSTALL_PREFIX=${JUMBO_ROOT} \
     -DSYSCONFDIR=${JUMBO_ROOT}/etc/mysql \
@@ -33,32 +37,32 @@ jumbo_install() {
     -DINSTALL_MYSQLSHAREDIR=share/mysql \
     -DINSTALL_DOCDIR=share/mysql/docs \
     -DINSTALL_SHAREDIR=share/mysql \
-    -DWITH_READLINE=ON \
-    -DWITH_ZLIB=system \
-    -DWITH_SSL=system \
+    -DINSTALL_PLUGINDIR=lib/mysql/plugin \
+    -DWITH_ZLIB=${JUMBO_ROOT} \
+    -DWITH_SSL=${JUMBO_ROOT} \
     -DWITH_LIBWRAP=OFF \
-    -DWITH_MYSQLD_LDFLAGS="${LDFLAGS}" \
+    -DCMAKE_EXE_LINKER_FLAGS="-L${JUMBO_ROOT}/lib -ljemalloc" \
     -DWITH_EXTRA_CHARSETS=complex \
     -DWITH_EMBEDDED_SERVER=ON \
-    -DWITH_INNOBASE_STORAGE_ENGINE=1 \
-    -DWITH_PARTITION_STORAGE_ENGINE=1 \
-    -DWITHOUT_EXAMPLE_STORAGE_ENGINE=1 \
-    -DWITHOUT_ARCHIVE_STORAGE_ENGINE=1 \
-    -DWITHOUT_BLACKHOLE_STORAGE_ENGINE=1 \
-    -DWITHOUT_FEDERATED_STORAGE_ENGINE=1 \
-    -DCMAKE_C_FLAGS="-fPIC ${CFLAGS} ${CPPFLAGS} -fno-strict-aliasing -DBIG_JOINS=1 -fomit-frame-pointer" \
-    -DCMAKE_CXX_FLAGS="-fPIC ${CXXFLAGS} ${CPPFLAGS} -fno-strict-aliasing -DBIG_JOINS=1 -felide-constructors -fno-rtti" \
-    -DCMAKE_INSTALL_RPATH=${JUMBO_ROOT}/lib \
-    -DCMAKE_INSTALL_RPATH_USE_LINK_PATH=TRUE
+    -DWITH_ARCHIVE_STORAGE_ENGINE=ON \
+    -DWITH_BLACKHOLE_STORAGE_ENGINE=ON \
+    -DWITH_INNOBASE_STORAGE_ENGINE=ON \
+    -DWITH_PARTITION_STORAGE_ENGINE=ON \
+    -DWITHOUT_EXAMPLE_STORAGE_ENGINE=ON \
+    -DWITHOUT_FEDERATED_STORAGE_ENGINE=ON \
+    -DCMAKE_C_FLAGS="-fPIC ${CFLAGS} -fno-strict-aliasing -DBIG_JOINS=1 -fomit-frame-pointer -fno-delete-null-pointer-checks" \
+    -DCMAKE_CXX_FLAGS="-fPIC ${CPPFLAGS} -std=gnu++98 -fno-strict-aliasing -DBIG_JOINS=1 -felide-constructors -fno-delete-null-pointer-checks" \
+    -DWITH_MYSQLD_LDFLAGS="-pie ${LDFLAGS},-z,now"
 
+  export LD_LIBRARY_PATH=${JUMBO_ROOT}/lib:${LD_LIBRARY_PATH}
   make
-  
+
   for dir in include libmysql libmysqld libservices; do
     make -C ${dir} DESTDIR="${pkgdir}" install
   done
 
-  install -d "${pkgdir}"/${JUMBO_ROOT}/bin
-  install -m755 scripts/mysql_config "${pkgdir}"/${JUMBO_ROOT}/bin/
+  install -m 755 -d "${pkgdir}"/${JUMBO_ROOT}/bin
+  install -m 755 scripts/mysql_config "${pkgdir}"/${JUMBO_ROOT}/bin/
   install -d "${pkgdir}"/${JUMBO_ROOT}/share/man/man1
   for man in mysql_config mysql_client_test_embedded mysqltest_embedded; do
     install -m644 "${srcdir}"/${pkgbase}-${pkgver}/man/$man.1 "${pkgdir}"/${JUMBO_ROOT}/share/man/man1/$man.1

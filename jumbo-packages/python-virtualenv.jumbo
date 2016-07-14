@@ -1,10 +1,10 @@
 pkgname=python-virtualenv
-pkgver=1.8.4
+pkgver=13.1.2
 pkgrel=1
 pkgdesc="Virtual Python Environment builder"
-depends=('python' 'python-distribute') # missdepends=()
+depends=('python' 'python-setuptools') # missdepends=()
 sources=("${JUMBO_REPO}/packages/${pkgname}/virtualenv-${pkgver}.tar.gz")
-md5sums=('1c7e56a7f895b2e71558f96e365ee7a7')
+md5sums=('b989598f068d64b32dead530eb25589a')
 
 jumbo_install() {
   cd "${srcdir}/virtualenv-${pkgver}"

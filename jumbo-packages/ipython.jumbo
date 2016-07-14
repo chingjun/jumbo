@@ -2,7 +2,7 @@ pkgname=ipython
 pkgver=0.13.1
 pkgrel=1
 pkgdesc="An enhanced Interactive Python2 shell."
-depends=('python' 'python-distribute') # missdepends=()
+depends=('python' 'python-setuptools') # missdepends=()
 sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tar.gz")
 md5sums=('ca7e75f7c802afc6aaa0a1ea59846420')
 

@@ -1,8 +1,8 @@
 pkgname=ncurses
 pkgver=5.9
-pkgrel=3
+pkgrel=6
 pkgdesc="System V Release 4.0 curses emulation library"
-depends=()
+depends=('pkg-config')
 sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tar.gz")
 md5sums=('8cb9c412e5f2d96bc6f459aa8c6282a1')
 
@@ -10,6 +10,11 @@ jumbo_install () {
   cd "${srcdir}"
 
   mkdir ncurses{,w}-build
+
+  export PKG_CONFIG_LIBDIR="${JUMBO_ROOT}/lib/pkgconfig"
+  export PKG_CONFIG="${JUMBO_ROOT}/bin/pkg-config"
+  # /usr/include/ncurses.h may affect ncurses installation
+  export C_INCLUDE_PATH="${JUMBO_ROOT}/include:/usr/include"
 
   cd "${srcdir}/ncursesw-build"
   ../${pkgname}-${pkgver}/configure --prefix="${JUMBO_ROOT}" --mandir="${JUMBO_ROOT}"/share/man \

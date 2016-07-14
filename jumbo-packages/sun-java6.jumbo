@@ -1,12 +1,13 @@
 pkgname=sun-java6
-_update=39
-pkgver=6u${_update}
+_pkgver=6
+_update=45
+pkgver=${_pkgver}u${_update}
 pkgrel=1
 pkgdesc="Sun Java 6 Development Kit and Runtime Environment without system integration"
 depends=() # missdepends=()
 sources=("${JUMBO_REPO}/packages/${pkgname}/jdk-${pkgver}-linux-x64.bin"
          "${JUMBO_REPO}/packages/${pkgname}/sun-java6-v2.profile")
-md5sums=('8170ab32937a115d164ff61f5d00697d'
+md5sums=('40c1a87563c5c6a90a0ed6994615befe'
          '6814b02fd0297c567e95820a4db19ff8')
 
 jumbo_install() {
@@ -14,16 +15,16 @@ jumbo_install() {
 
   /bin/sh jdk-${pkgver}-linux-x64.bin -noregister
   install -d "${pkgdir}/${JUMBO_ROOT}/opt"
-  mv jdk1.6.0_${_update} "${pkgdir}/${JUMBO_ROOT}/opt/${pkgname}"
+  mv jdk1.${_pkgver}.0_${_update} "${pkgdir}/${JUMBO_ROOT}/opt/${pkgname}"
   
   mkdir -p "${pkgdir}/${JUMBO_ROOT}/etc/bashrc.d/"
-  install -m755 sun-java6-v2.profile "${pkgdir}/${JUMBO_ROOT}/etc/bashrc.d/sun-java6.sh"
+  install -m755 sun-java${_pkgver}-v2.profile "${pkgdir}/${JUMBO_ROOT}/etc/bashrc.d/sun-java${_pkgver}.sh"
 }
 
 jumbo_post_install() {
   cat <<"EOF"
     >>
-    >> The sun-java6 has been installed to ${JUMBO_ROOT}/opt/java6
+    >> The sun-java6 has been installed to ${JUMBO_ROOT}/opt/sun-java6
     >> which will be added to $PATH automatically after re-login.
     >>
 EOF

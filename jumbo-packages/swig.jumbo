@@ -1,10 +1,10 @@
 pkgname=swig
-pkgver=2.0.9
+pkgver=3.0.10
 pkgrel=1
 pkgdesc="Generate scripting interfaces to C/C++ code"
 depends=('zlib' 'pcre') # missdepends=()
 sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tar.gz")
-md5sums=('54d534b14a70badc226129159412ea85')
+md5sums=('bb4ab8047159469add7d00910e203124')
 
 jumbo_install() {
   cd "${srcdir}/${pkgname}-${pkgver}"

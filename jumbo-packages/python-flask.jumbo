@@ -3,7 +3,7 @@ _realname=Flask
 pkgver=0.9
 pkgrel=1
 pkgdesc='Micro webdevelopment framework for Python'
-depends=('python' 'python-werkzeug' 'python-jinja') # missdepends=()
+depends=('python' 'python-setuptools' 'python-werkzeug' 'python-jinja') # missdepends=()
 sources=("${JUMBO_REPO}/packages/${pkgname}/${_realname}-${pkgver}.tar.gz")
 md5sums=('4a89ef2b3ab0f151f781182bd0cc8933')
 

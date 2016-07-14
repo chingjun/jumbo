@@ -1,13 +1,15 @@
 pkgname=python
-pkgver=2.7.3
+pkgver=2.7.12
 pkgrel=5
 _pybasever=2.7
 pkgdesc="A high-level scripting language"
 depends=('sqlite3' 'zlib' 'expat' 'libffi' 'bzip2' 'openssl') # missdepends=('gdbm')
-sources=("${JUMBO_REPO}/packages/${pkgname}/Python-${pkgver}.tar.bz2"
-         "${JUMBO_REPO}/packages/${pkgname}/000-damn-usr-local-die-die-die.patch")
-md5sums=('c57477edd6d18bd9eeca2f21add73919'
-         'c272c36f5d1709f55ad6e67a731c1d4e')
+sources=("${JUMBO_REPO}/packages/${pkgname}/Python-${pkgver}.tgz"
+         "${JUMBO_REPO}/packages/${pkgname}/001-damn-usr-local-die-die-die.patch"
+         "${JUMBO_REPO}/packages/${pkgname}/descr_ref.patch")
+md5sums=('88d61f82e3616a4be952828b3694109d'
+         '1754c350f7e8e96e404b5453c914993a'
+         '08405d2447c07f91dab0b16e0a9f42c6')
 
 jumbo_install() {
   cd "${srcdir}/Python-${pkgver}"
@@ -23,8 +25,11 @@ jumbo_install() {
   # Jun Huang: use /usr/bin/env instead
   sed -i -e "s|^#.* /usr/local/bin/python|#!/usr/bin/env python|" Lib/cgi.py
 
+  sed -i "s/python2.3/python2/g" Lib/distutils/tests/test_build_scripts.py \
+    Lib/distutils/tests/test_install_scripts.py
+
   # Jun Huang: fix to never use the libraries in /usr/local/
-  patch -Np1 -i ../000-damn-usr-local-die-die-die.patch
+  patch -Np1 -i ../001-damn-usr-local-die-die-die.patch
 
   # Ensure that we are using the system copy of various libraries (expat, zlib and libffi),
   # rather than copies shipped in the tarball
@@ -32,20 +37,43 @@ jumbo_install() {
   rm -r Modules/zlib
   rm -r Modules/_ctypes/{darwin,libffi}*
 
+  # clean up #!s
+  find . -name '*.py' | \
+    xargs sed -i "s|#[ ]*![ ]*/usr/bin/env python$|#!/usr/bin/env python2|"
+
+  # Workaround asdl_c.py/makeopcodetargets.py errors after we touched the shebangs
+  touch Include/Python-ast.h Python/Python-ast.c Python/opcode_targets.h
+
+  # FS#48761
+  # http://bugs.python.org/issue25750
+  patch -p1 -i ../descr_ref.patch
+
   unset MAKEFLAGS
   export OPT="-I. -IInclude -I./Include ${CFLAGS}"
   unset CFLAGS
   unset CXXFLAGS
   unset CPPFLAGS
   export LDFLAGS="-L. ${LDFLAGS}"
-  ./configure --prefix="${JUMBO_ROOT}" --enable-shared --with-threads \
-              --enable-unicode=ucs4 --with-system-expat --with-system-ffi
+  ./configure --prefix="${JUMBO_ROOT}" \
+              --enable-shared \
+              --with-threads \
+              --enable-ipv6 \
+              --enable-unicode=ucs4 \
+              --with-system-expat \
+              --with-system-ffi \
+              --with-dbmliborder=gdbm:ndbm \
+              --without-ensurepip
   make
   make DESTDIR="${pkgdir}" install
+
+  rm "${pkgdir}"/${JUMBO_ROOT}/share/man/man1/python.1
 
   ln -sf python${_pybasever}        "${pkgdir}/${JUMBO_ROOT}/bin/python2"
   ln -sf python${_pybasever}-config "${pkgdir}/${JUMBO_ROOT}/bin/python2-config"
   ln -sf python${_pybasever}.1      "${pkgdir}/${JUMBO_ROOT}/share/man/man1/python2.1"
+
+  # FS#33954
+  ln -sf python-${_pybasever}.pc    "${pkgdir}"/${JUMBO_ROOT}/lib/pkgconfig/python2.pc
 
   ln -sf ../../libpython${_pybasever}.so \
     "${pkgdir}/${JUMBO_ROOT}/lib/python${_pybasever}/config/libpython${_pybasever}.so"
@@ -59,6 +87,11 @@ jumbo_install() {
   install -m755 Tools/scripts/{README,*py} \
     "${pkgdir}/${JUMBO_ROOT}/lib/python${_pybasever}/Tools/scripts/"
 
+  # fix conflicts with python
+  mv "${pkgdir}"/${JUMBO_ROOT}/bin/idle{,2}
+  mv "${pkgdir}"/${JUMBO_ROOT}/bin/pydoc{,2}
+  mv "${pkgdir}"/${JUMBO_ROOT}/bin/2to3{,-2.7}
+
   # clean-up reference to build directory
   sed -i "s#${srcdir}/Python-${pkgver}:##" \
     "${pkgdir}/${JUMBO_ROOT}/lib/python${_pybasever}/config/Makefile"
@@ -70,6 +103,25 @@ jumbo_install() {
   else
     return 0
   fi 
+}
+
+jumbo_pre_install() {
+  if ! touch /dev/shm/.test 2>/dev/null || [ ! -e "/dev/shm/.test" ]; then
+    # /dev/shm unwritable
+    cat <<"EOF"
+    >>
+    >> /dev/shm is unwritable, multiprocessing.Semaphore will not be available
+    >> after your Python-${pkgver} installation
+    >> If you have any other questions
+    >> Feel free to report it in jumbo Hi Group: 1385772
+    >>
+EOF
+  fi
+  rm -f /dev/shm/.test
+}
+
+jumbo_pre_update() {
+  jumbo_pre_install
 }
 
 # vim:set ft=sh ts=2 sw=2 et:

@@ -2,7 +2,7 @@ pkgname=lua
 pkgver=5.1.5
 pkgrel=1
 pkgdesc="A powerful light-weight programming language designed for extending applications" 
-depends=('readline') # missdepends=()
+depends=('readline' 'ncurses') # missdepends=()
 sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tar.gz"
          "${JUMBO_REPO}/packages/${pkgname}/lua-5.1-cflags.patch"
          "${JUMBO_REPO}/packages/${pkgname}/lua-so.patch")
@@ -20,7 +20,9 @@ jumbo_install() {
   sed -i -e "/^prefix= / s|/usr/local|${JUMBO_ROOT}|" etc/lua.pc
   sed -i -e "/^#define LUA_ROOT/ s|\"/usr/local\"|\"${JUMBO_ROOT}\"|" src/luaconf.h
 
-  export CFLAGS="$CFLAGS -fPIC"
+  export CFLAGS="$CFLAGS -fPIC -L${JUMBO_ROOT}/lib"
+  make MYCFLAGS="$CFLAGS" MYLDFLAGS="$LDFLAGS" linux
+
   make INSTALL_DATA="cp -d" TO_LIB="liblua.a liblua.so liblua.so.5.1" \
     INSTALL_TOP="${pkgdir}/${JUMBO_ROOT}" INSTALL_MAN="${pkgdir}/${JUMBO_ROOT}/share/man/man1" \
     linux

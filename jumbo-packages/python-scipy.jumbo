@@ -1,11 +1,11 @@
 pkgname=python-scipy
 _realname=scipy
-pkgver=0.11.0
+pkgver=0.16.1
 pkgrel=1
 pkgdesc="Scientific tools for Python"
-depends=('python' 'python-numpy' 'gcc46') # missdepends=()
+depends=('python' 'python-setuptools' 'python-numpy' 'gcc46') # missdepends=()
 sources=("${JUMBO_REPO}/packages/${pkgname}/${_realname}-${pkgver}.tar.gz")
-md5sums=('842c81d35fd63579c41a8ca21a2419b9')
+md5sums=('967cdb8588a4249f820344d8264a2143')
 
 jumbo_install() {
   cd "${srcdir}/${_realname}-${pkgver}"

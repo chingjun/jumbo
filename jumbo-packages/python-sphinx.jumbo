@@ -3,7 +3,7 @@ _realname=Sphinx
 pkgver=1.1.3
 pkgrel=1
 pkgdesc="Python documentation generator"
-depends=('python-jinja' 'python-pygments' 'python-docutils')
+depends=('python' 'python-setuptools' 'python-jinja' 'python-pygments' 'python-docutils')
 sources=("${JUMBO_REPO}/packages/${pkgname}/${_realname}-${pkgver}.tar.gz")
 md5sums=('8f55a6d4f87fc6d528120c5d1f983e98')
 

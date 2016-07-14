@@ -1,11 +1,11 @@
 pkgname=ccache
-pkgver=3.1.9
+pkgver=3.2.5
 pkgrel=1
 pkgdesc="A compiler cache"
-arch=('i686' 'x86_64')
+#arch=('i686' 'x86_64')
 depends=('zlib') # missdepends=()
 sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tar.bz2")
-md5sums=('65f48376a91d3651d6527ca568858be8')
+md5sums=('1bd0326b8fe14be592edc735e1223264')
 
 jumbo_install() {
   cd "${srcdir}/${pkgname}-${pkgver}"

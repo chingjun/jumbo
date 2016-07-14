@@ -3,7 +3,7 @@ _realname=nose
 pkgver=1.2.1
 pkgrel=1
 pkgdesc="A discovery-based unittest extension"
-depends=('python' 'python-distribute') # missdepends=()
+depends=('python' 'python-setuptools') # missdepends=()
 sources=("${JUMBO_REPO}/packages/${pkgname}/${_realname}-${pkgver}.tar.gz")
 md5sums=("735e3f1ce8b07e70ee1b742a8a53585a")
 

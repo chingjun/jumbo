@@ -2,7 +2,7 @@ pkgname=supervisor
 pkgver=3.0a12
 pkgrel=2
 pkgdesc="A system for controlling process state under UNIX"
-depends=('python' 'python-meld3' 'python-distribute') # missdepends=()
+depends=('python' 'python-meld3' 'python-setuptools') # missdepends=()
 sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tar.gz"
          "${JUMBO_REPO}/packages/${pkgname}/supervisord.conf")
 md5sums=('eb2ea5a2c3b665ba9277d17d14584a25'

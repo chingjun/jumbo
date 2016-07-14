@@ -1,15 +1,14 @@
 pkgname=python-numpy
 _realname=numpy
-pkgver=1.7.0
-_pkgver=1.7.0b2
+pkgver=1.10.1
 pkgrel=1
 pkgdesc="Scientific tools for Python"
-depends=('lapack' 'python' 'python-distribute' 'gcc46') # missdepends=()
-sources=("${JUMBO_REPO}/packages/${pkgname}/${_realname}-${_pkgver}.tar.gz")
-md5sums=('1b62cf0e34e2db58b0241b00d603df24')
+depends=('lapack' 'python' 'python-setuptools' 'gcc46' 'python-cython') # missdepends=()
+sources=("${JUMBO_REPO}/packages/${pkgname}/v${pkgver}.tar.gz")
+md5sums=('d2a125a52187ab234bfe444287b53660')
 
 jumbo_install() {
-  cd "${srcdir}/${_realname}-${_pkgver}"
+  cd "${srcdir}/${_realname}-${pkgver}"
 
   export Atlas=None
   export LDFLAGS="${LDFLAGS} -shared"

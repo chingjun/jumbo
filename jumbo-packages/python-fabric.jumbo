@@ -1,10 +1,10 @@
 pkgname=python-fabric
-pkgver=1.5.3
+pkgver=1.10.0
 pkgrel=1
 pkgdesc="Fabric is a simple, Pythonic tool for remote execution and deployment"
-depends=('python' 'python-paramiko') # missdepends=()
+depends=("python" "python-paramiko" "python-setuptools") # missdepends=()
 sources=("${JUMBO_REPO}/packages/${pkgname}/Fabric-${pkgver}.tar.gz")
-md5sums=('8831c0a6cba9134a31b7c9405b145b21')
+md5sums=('2cb96473387f0e7aa035210892352f4a')
 
 jumbo_install() {
    cd "${srcdir}/Fabric-${pkgver}"

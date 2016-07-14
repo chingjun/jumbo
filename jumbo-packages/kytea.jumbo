@@ -1,14 +1,14 @@
 pkgname=kytea
-pkgver=0.4.2
+pkgver=0.4.6
 pkgrel=1
 pkgdesc="General toolkit developed for analyzing text, with a focus on Japanese, Chinese and other languages requiring word or morpheme segmentation."
-depends=() # missdepends=()
+depends=('gcc53') # missdepends=()
 sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tar.gz")
-md5sums=('2104e3e9a3587826bf04887d5f7fd03e')
+md5sums=('3672f8b90ff8c0420dd6d4f1f11c5c3f')
 
 jumbo_install() {
   cd "${srcdir}/${pkgname}-${pkgver}"
-
+  export PATH="${JUMBO_ROOT}/opt/gcc53/bin:${PATH}"
   export CFLAGS="${CFLAGS} -O3"
   export CXXFLAGS="${CXXFLAGS} -O3"
   ./configure --prefix="${JUMBO_ROOT}"

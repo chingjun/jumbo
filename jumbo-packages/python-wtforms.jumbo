@@ -3,7 +3,7 @@ _realname=WTForms
 pkgver=1.0.3
 pkgrel=1
 pkgdesc="A flexible forms validation and rendering library for python web development."
-depends=('python' 'python-distribute' 'unzip') # missdepends=()
+depends=('python' 'python-setuptools' 'unzip') # missdepends=()
 sources=("${JUMBO_REPO}/packages/${pkgname}/${_realname}-${pkgver}.zip")
 md5sums=('3a35f12a495dad15b427447555d4bd6e')
 

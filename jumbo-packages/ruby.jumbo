@@ -1,21 +1,26 @@
 pkgname=ruby
-pkgver=1.9.3_p385
+pkgver=2.2.2
 pkgrel=1
 pkgdesc='An object-oriented language for quick and easy programming'
-depends=('libffi' 'libyaml' 'pkg-config' 'openssl') # missdepends=()
-sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver//_/-}.tar.bz2")
-md5sums=('5ec9aff670f4912b0f6f0e11e855ef6c')
+depends=('xz' 'openssl' 'libffi' 'libyaml' 'zlib' 'pkg-config') # missdepends=('gdbm' 'gmp')
+arch2jam=1
+sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tar.xz")
+md5sums=('dbce9b9d79d90f213ba8d448b0b6ed86')
 
 jumbo_install() {
-  cd "${srcdir}/${pkgname}-${pkgver//_/-}"
-
-  PKG_CONFIG=${JUMBO_ROOT}/bin/pkg-config \
-    ./configure \
-    --prefix="${JUMBO_ROOT}" \
-    --sysconfdir="${JUMBO_ROOT}/etc" \
+  cd ${srcdir}
+  xz -c -d "ruby-2.2.2.tar.xz" | tar -x
+  cd ruby-${pkgver}
+  PKG_CONFIG=${JUMBO_ROOT}/bin/pkg-config ./configure \
+    --prefix=${JUMBO_ROOT} \
+    --sysconfdir=${JUMBO_ROOT}/etc \
+    --localstatedir=${JUMBO_ROOT}/var \
+    --sharedstatedir=${JUMBO_ROOT}/var/lib \
+    --libexecdir=${JUMBO_ROOT}/lib/ruby \
     --enable-shared \
     --enable-pthread \
-    --disable-install-doc
+    --disable-install-doc \
+    --with-dbm-type=gdbm_compat
   make
   make DESTDIR="${pkgdir}" install-nodoc
 }

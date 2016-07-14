@@ -3,7 +3,7 @@ _realname=docutils
 pkgver=0.10
 pkgrel=1
 pkgdesc='Set of tools for processing plaintext docs into formats such as HTML, XML, or LaTeX'
-depends=('python')
+depends=('python' 'python-setuptools')
 sources=("${JUMBO_REPO}/packages/${pkgname}/${_realname}-${pkgver}.tar.gz")
 md5sums=('d8d4660c08302c791b2d71a155a2f4bc')
 

@@ -2,7 +2,7 @@ pkgname=python-yaml
 pkgver=3.10
 pkgrel=1
 pkgdesc="Python bindings for YAML, using fast libYAML library"
-depends=('python' 'libyaml') # missdepends=()
+depends=('python' 'python-setuptools' 'libyaml') # missdepends=()
 sources=("${JUMBO_REPO}/packages/${pkgname}/PyYAML-${pkgver}.tar.gz")
 md5sums=('74c94a383886519e9e7b3dd1ee540247')
 

@@ -2,7 +2,7 @@ pkgname=python-nltk
 pkgver=2.0.1
 pkgrel=1
 pkgdesc="Natural Language Toolkit"
-depends=('python' 'python-yaml' 'python-numpy') # missdepends=()
+depends=('python' 'python-setuptools' 'python-yaml' 'python-numpy') # missdepends=()
 sources=("${JUMBO_REPO}/packages/${pkgname}/nltk-${pkgver}.tar.gz")
 md5sums=('d9a33ce26ac61a27ecb2d2b9943604c6')
 

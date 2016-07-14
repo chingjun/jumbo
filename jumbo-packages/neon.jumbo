@@ -1,10 +1,10 @@
 pkgname=neon
-pkgver=0.29.6
-pkgrel=4
+pkgver=0.30.1
+pkgrel=1
 pkgdesc="HTTP and WebDAV client library with a C interface"
 depends=('expat' 'openssl') # missdepends=('krb5' 'ca-certificates')
 sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.tar.gz")
-md5sums=('591e0c82e6979e7e615211b386b8f6bc')
+md5sums=('231adebe5c2f78fded3e3df6e958878e')
 
 jumbo_install() {
   cd "${srcdir}/${pkgname}-${pkgver}"

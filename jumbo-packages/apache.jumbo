@@ -1,5 +1,5 @@
 pkgname=apache
-pkgver=2.2.23
+pkgver=2.4.20
 pkgrel=1
 pkgdesc="A high performance Unix-based HTTP server"
 backups=(etc/httpd/conf/httpd.conf
@@ -9,11 +9,11 @@ backups=(etc/httpd/conf/httpd.conf
 depends=('openssl' 'zlib' 'apr-util' 'pcre')
 sources=("${JUMBO_REPO}/packages/${pkgname}/httpd-${pkgver}.tar.bz2"
          "${JUMBO_REPO}/packages/${pkgname}/jumbo.layout")
-md5sums=('ca133de0e4b4b15316990a97186b9993'
+md5sums=('3ff4f00ee051cf5d5304b47b1bc418b8'
          '37bde42c03a0a6afab5a149bc60a766e')
 
 jumbo_install() {
-	cd "${srcdir}/httpd-${pkgver}"
+  cd "${srcdir}/httpd-${pkgver}"
 
   cat "${srcdir}/jumbo.layout" | sed -e "s|#JUMBO_ROOT#|${JUMBO_ROOT}|" >> config.layout
 

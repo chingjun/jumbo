@@ -1,8 +1,8 @@
 pkgname=gcc46
 pkgver=4.6.3
-pkgrel=4
+pkgrel=5
 pkgdesc="The GNU Compiler Collection (4.6.x)"
-depends=('gmp' 'mpfr' 'libmpc' 'binutils') # missdepends=('isl' 'cloog' 'glibc' 'ppl' 'elfutils' 'flex' 'bison')
+depends=('gmp' 'mpfr' 'libmpc' 'binutils' 'xz') # missdepends=('isl' 'cloog' 'glibc' 'ppl' 'elfutils' 'flex' 'bison')
 sources=("${JUMBO_REPO}/packages/${pkgname}/gcc-core.tar.bz2"
          "${JUMBO_REPO}/packages/${pkgname}/gcc-g++.tar.bz2"
          "${JUMBO_REPO}/packages/${pkgname}/gcc-fortran.tar.bz2")
@@ -14,6 +14,9 @@ _basedir="${srcdir}/gcc-${pkgver}"
 
 jumbo_install() {
   cd ${_basedir}
+
+  # use $JUMBO_ROOT/opt/binutils/bin/ld instead of /usr/bin/ld
+  export PATH="$JUMBO_ROOT/opt/binutils/bin:$PATH"
 
   # Do not install libiberty
   sed -i 's/install_to_$(INSTALL_DEST) //' libiberty/Makefile.in
@@ -59,8 +62,8 @@ jumbo_install() {
       --with-gnu-ld \
       --with-ld="${JUMBO_ROOT}/opt/binutils/bin/ld" \
       --with-build-time-tools="${JUMBO_ROOT}/opt/binutils/bin" \
-      --with-boot-ldflags="-Wl,-rpath=${JUMBO_ROOT}/lib -L${JUMBO_ROOT}/lib" \
-      --with-stage1-ldflags="-Wl,-rpath=${JUMBO_ROOT}/lib -L${JUMBO_ROOT}/lib" \
+      --with-boot-ldflags="${LDFLAGS}" \
+      --with-stage1-ldflags="${LDFLAGS}" \
       --with-cloog=no \
       --with-ppl=no \
       --with-system-zlib
@@ -70,6 +73,12 @@ jumbo_install() {
   # many packages expect this symlinks
   ln -s gcc "${pkgdir}/${JUMBO_ROOT}/opt/gcc46/bin/cc"
   ln -s gfortran "${pkgdir}/${JUMBO_ROOT}/opt/gcc46/bin/f95"
+
+  # A dirty hack for "/lib64/ld-linux-x86-64.so.2: error adding symbols:
+  # DSO missing from command line"
+  # This libc.so is automatically generated if glibc is also installed.
+  echo -e "OUTPUT_FORMAT(elf64-x86-64)\nGROUP ( libc.so.6 libc_nonshared.a  AS_NEEDED ( ld-linux-x86-64.so.2 ) )" > \
+    ${pkgdir}/${JUMBO_ROOT}/opt/gcc46/lib64/libc.so
 
   # POSIX conformance launcher scripts for c89 and c99
   cat > "${pkgdir}/${JUMBO_ROOT}/opt/gcc46/bin/c89" <<"EOF"

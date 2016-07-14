@@ -2,7 +2,7 @@ pkgname=phantomjs
 pkgver=1.8.1
 pkgrel=1
 pkgdesc="Headless WebKit with JavaScript API"
-depends=("gcc46" "chrpath" "unzip") # missdepends=('fontconfig' 'freetype2')
+depends=("gcc53" "chrpath" "unzip") # missdepends=('fontconfig' 'freetype2')
 sources=("${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}-source.zip"
          "${JUMBO_REPO}/packages/${pkgname}/${pkgname}-${pkgver}.patch")
 md5sums=('5cea0eb0331d255338d70a60a5ad026c'
@@ -17,7 +17,7 @@ jumbo_install() {
   # workaround for http://code.google.com/p/phantomjs/issues/detail?id=635
   sed -i 's/QMAKE_LFLAGS+=-fuse-ld=gold/#QMAKE_LFLAGS+=-fuse-ld=gold/' src/qt/src/3rdparty/webkit/Source/common.pri
 
-  export PATH="${JUMBO_ROOT}/opt/gcc46/bin:${PATH}"
+  export PATH="${JUMBO_ROOT}/opt/gcc53/bin:${PATH}"
   yes | ./build.sh
 
   install -D -m755 "${srcdir}/${pkgname}-${pkgver}/bin/phantomjs" "${pkgdir}/${JUMBO_ROOT}/bin/phantomjs"
